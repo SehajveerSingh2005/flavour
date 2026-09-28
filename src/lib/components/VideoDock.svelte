@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { player } from '$lib/player.svelte';
+	import Icon from './Icon.svelte';
 
 	onMount(() => {
 		void player.mount('yt-host');
@@ -19,9 +20,12 @@
 			<span class="muted truncate">{player.current?.artist ?? ''}</span>
 			<button
 				class="btn btn--icon"
-				title="Exit immersive (F)"
-				onclick={() => player.setImmersive(false)}>✕</button
+				title="Exit immersive (Esc)"
+				aria-label="Exit immersive mode"
+				onclick={() => player.setImmersive(false)}
 			>
+				<Icon name="minimize" size={17} />
+			</button>
 		</div>
 	{/if}
 </div>

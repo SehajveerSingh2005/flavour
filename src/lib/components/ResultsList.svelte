@@ -1,7 +1,17 @@
 <script lang="ts">
 	import { formatDuration } from '$lib/format';
 	import { player } from '$lib/player.svelte';
+	import { QUICK } from '$lib/quick';
 	import { search } from '$lib/search.svelte';
+	import { toasts } from '$lib/toasts.svelte';
+	import Icon from './Icon.svelte';
+	import TrackMenu from './TrackMenu.svelte';
+
+	async function quickPick(q: string) {
+		search.setQuery(q);
+		const tracks = await search.run(q);
+		if (!tracks.length && !search.error) toasts.push('Nothing found — try different words', 'error');
+	}
 </script>
 
 {#if search.loading && !search.results.length}
@@ -44,17 +54,18 @@
 					{#if track.source === 'video'}
 						<span class="badge">yt</span>
 					{/if}
-					<span class="dur">{formatDuration(track.duration)}</span>
+					<span class="dur mono">{formatDuration(track.duration)}</span>
 				</button>
 				<div class="actions">
-					<button class="btn btn--icon" title="Play next" onclick={() => player.addNext(track)}
-						>↳</button
-					>
 					<button
 						class="btn btn--icon"
-						title="Add to queue"
-						onclick={() => player.addToQueue(track)}>+</button
+						title="Play next"
+						aria-label="Play “{track.title}” next"
+						onclick={() => player.addNext(track)}
 					>
+						<Icon name="play-next" size={16} />
+					</button>
+					<TrackMenu {track} />
 				</div>
 			</li>
 		{/each}
@@ -70,6 +81,13 @@
 				type something above — “lofi”, “tame impala”, “songs for pretending to work”. the
 				<strong>lucky</strong> button plays the top hit straight away.
 			</p>
+			<div class="quick">
+				{#each QUICK as q (q)}
+					<button class="chip" onclick={() => quickPick(q)}>
+						<Icon name="search" size={13} /> {q}
+					</button>
+				{/each}
+			</div>
 		{/if}
 	</div>
 {/if}
@@ -175,6 +193,13 @@
 	}
 	.placeholder p.muted {
 		max-width: 46ch;
+	}
+	.quick {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		justify-content: center;
+		margin-top: 6px;
 	}
 
 	/* skeletons */

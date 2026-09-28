@@ -33,33 +33,47 @@ const browser = await puppeteer.launch({
 const page = await browser.newPage();
 await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
 await page.goto(BASE, { waitUntil: 'domcontentloaded' });
-await page.evaluate(() => localStorage.removeItem('flavour:queue'));
+await page.evaluate(() => {
+	for (const key of ['flavour:queue', 'flavour:history', 'flavour:mixes', 'flavour:recents', 'flavour:panels']) {
+		localStorage.removeItem(key);
+	}
+});
 await page.reload({ waitUntil: 'domcontentloaded' });
 await page.evaluate(() => document.fonts?.ready);
 await sleep(1200);
-await page.screenshot({ path: `${OUT}/m1-empty.png` });
+await page.screenshot({ path: `${OUT}/m1-home.png` });
 
+// search: the panel floats over the page
 await page.click('#search-input');
 await page.type('#search-input', QUERY, { delay: 20 });
-await sleep(2500);
-await page.screenshot({ path: `${OUT}/m2-results.png` });
+await page.waitForFunction(() => document.querySelectorAll('.panel .track-row').length > 0, { timeout: 20000 });
+await sleep(700);
+await page.screenshot({ path: `${OUT}/m2-overlay.png` });
 
-await page.click('form .btn--pop');
+// committed results page
+await page.keyboard.press('Enter');
+await page.waitForFunction(() => location.pathname === '/search', { timeout: 10000 });
+await page.waitForFunction(() => document.querySelectorAll('.tray .rows .row').length > 0, { timeout: 20000 });
+await sleep(900);
+await page.screenshot({ path: `${OUT}/m3-results.png` });
+
+// play the top hit, then scroll a little: mini player docked above the tabs
+await page.evaluate(() => document.querySelector('.tray .rows .row .hit')?.click());
 await sleep(6000);
-await page.screenshot({ path: `${OUT}/m3-playing.png` });
-
-await page.evaluate(() => window.scrollTo(0, 220));
+await page.evaluate(() => window.scrollTo(0, 200));
 await sleep(500);
-await page.screenshot({ path: `${OUT}/m4-scrolled.png` });
+await page.screenshot({ path: `${OUT}/m4-playing.png` });
 
 const state = await page.evaluate(() => {
 	const txt = (s) => document.querySelector(s)?.textContent?.trim() ?? null;
 	const mini = document.querySelector('.mini');
+	const play = document.querySelector('.mini .play');
 	return {
+		route: location.pathname + location.search,
 		track: txt('.mini .meta strong'),
 		miniVisible: !!mini && getComputedStyle(mini).display !== 'none',
-		miniPlay: txt('.mini .play'),
-		stagePosition: getComputedStyle(document.querySelector('.stage')).position,
+		miniState: play?.getAttribute('data-state') ?? null,
+		deckPosition: getComputedStyle(document.querySelector('.np')).position,
 		viewport: `${innerWidth}x${innerHeight}`
 	};
 });

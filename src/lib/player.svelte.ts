@@ -1,5 +1,6 @@
 import { browser } from '$app/environment';
 import { clamp } from './format';
+import { history } from './history.svelte';
 import {
 	clearMediaMetadata,
 	setPlaybackState,
@@ -27,6 +28,7 @@ interface PersistedSettings {
 	muted: boolean;
 	shuffle: boolean;
 	repeat: RepeatMode;
+	radio: boolean;
 }
 
 function uid(): string {
@@ -65,6 +67,8 @@ function createPlayer() {
 	let muted = $state(false);
 	let shuffle = $state(false);
 	let repeat = $state<RepeatMode>('off');
+	let radio = $state(true);
+	let refilling = $state(false);
 	let immersive = $state(false);
 	let apiReady = $state(false);
 	let mountError = $state<string | null>(null);
@@ -95,7 +99,7 @@ function createPlayer() {
 	function persistSettings() {
 		if (!browser) return;
 		try {
-			const payload: PersistedSettings = { volume, muted, shuffle, repeat };
+			const payload: PersistedSettings = { volume, muted, shuffle, repeat, radio };
 			localStorage.setItem(SETTINGS_KEY, JSON.stringify(payload));
 		} catch {
 			/* storage full or unavailable */
@@ -123,6 +127,7 @@ function createPlayer() {
 				if (typeof s.volume === 'number') volume = clamp(s.volume, 0, 1);
 				muted = !!s.muted;
 				shuffle = !!s.shuffle;
+				radio = s.radio === undefined ? true : !!s.radio;
 				if (s.repeat === 'off' || s.repeat === 'all' || s.repeat === 'one') repeat = s.repeat;
 			}
 		} catch {
@@ -158,6 +163,7 @@ function createPlayer() {
 		duration = track.duration || 0;
 		loadedId = track.id;
 		updateMediaMetadata(track);
+		history.record(track);
 
 		if (!yt || !apiReady) {
 			pendingPlay = autoplay;
@@ -356,6 +362,10 @@ function createPlayer() {
 		if (n >= queue.length) {
 			if (repeat === 'all') {
 				n = 0;
+			} else if (auto && radio) {
+				// queue over — let YouTube's up-next refill it and keep rolling
+				void growAndAdvance();
+				return;
 			} else if (auto) {
 				status = 'paused';
 				return;
@@ -364,6 +374,53 @@ function createPlayer() {
 			}
 		}
 		index = n;
+		loadCurrent(true);
+		persistQueue();
+	}
+
+	/** Pull fresh tracks from the radio for the current video. */
+	async function refillQueue(seedId?: string): Promise<boolean> {
+		const id = seedId ?? current?.id;
+		if (!id || refilling) return false;
+		refilling = true;
+		try {
+			const res = await fetch(`/api/radio?id=${encodeURIComponent(id)}`);
+			if (!res.ok) return false;
+			const data = (await res.json()) as { tracks?: Track[] };
+			const known = new Set(queue.map((t) => t.id));
+			const fresh = (data.tracks ?? []).filter((t) => t.id !== id && !known.has(t.id));
+			if (!fresh.length) return false;
+			queue = [...queue, ...fresh.map(makeItem)];
+			persistQueue();
+			toasts.push(`Radio lined up ${fresh.length} more`, 'accent');
+			return true;
+		} catch {
+			return false;
+		} finally {
+			refilling = false;
+		}
+	}
+
+	/** Called when a track ends and the queue is spent. */
+	async function growAndAdvance() {
+		const seed = current;
+		if (!seed) {
+			status = 'paused';
+			return;
+		}
+		status = 'buffering';
+		const ok = await refillQueue(seed.id);
+		// the listener may have skipped (or paused) while we were fetching
+		const stillBuffering = () => status === 'buffering';
+		if (current?.uid !== seed.uid) return;
+		if (!ok) {
+			status = 'paused';
+			toasts.push('Radio came up empty — the queue is done', 'error');
+			return;
+		}
+		if (!stillBuffering()) return;
+		const at = queue.findIndex((t) => t.uid === seed.uid);
+		index = at + 1 < queue.length ? at + 1 : 0;
 		loadCurrent(true);
 		persistQueue();
 	}
@@ -421,6 +478,12 @@ function createPlayer() {
 		toasts.push(repeat === 'off' ? 'Repeat off' : repeat === 'all' ? 'Repeat queue' : 'Repeat one');
 	}
 
+	function toggleRadio() {
+		radio = !radio;
+		persistSettings();
+		toasts.push(radio ? 'Autoplay radio on' : 'Autoplay radio off');
+	}
+
 	/* ---------- queue editing ---------- */
 	function addToQueue(track: Track) {
 		queue = [...queue, makeItem(track)];
@@ -467,6 +530,19 @@ function createPlayer() {
 			if (at >= 0) index = at;
 		}
 		persistQueue();
+	}
+
+	/** Slot a queued track directly after the one playing now. */
+	function moveToNext(from: number) {
+		if (from === index) return;
+		const to = from < index ? index : index + 1;
+		move(from, to);
+	}
+
+	/** Jump a queued track to the front of the queue. */
+	function moveToTop(from: number) {
+		if (from === index || from === 0) return;
+		move(from, 0);
 	}
 
 	function clearQueue() {
@@ -535,6 +611,12 @@ function createPlayer() {
 		get repeat() {
 			return repeat;
 		},
+		get radio() {
+			return radio;
+		},
+		get refilling() {
+			return refilling;
+		},
 		get immersive() {
 			return immersive;
 		},
@@ -554,7 +636,10 @@ function createPlayer() {
 		addNext,
 		removeAt,
 		move,
+		moveToNext,
+		moveToTop,
 		clearQueue,
+		refillQueue,
 		togglePlay,
 		resume,
 		pause: pauseAction,
@@ -565,6 +650,7 @@ function createPlayer() {
 		toggleMute,
 		toggleShuffle,
 		cycleRepeat,
+		toggleRadio,
 		setImmersive,
 		toggleImmersive
 	};

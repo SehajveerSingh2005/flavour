@@ -1,78 +1,23 @@
 import { error, json } from '@sveltejs/kit';
-import { Innertube } from 'youtubei.js';
-import { cleanTitle, splitArtistTitle, upscaleArt } from '$lib/format';
-import type { Track } from '$lib/types';
+import {
+	fromMusicItem,
+	fromVideoItem,
+	getInnertube,
+	toCollection,
+	type MusicItemLike,
+	type TwoRowItemLike,
+	type VideoItemLike
+} from '$lib/server/yt';
+import type { Collection, Track } from '$lib/types';
 import type { RequestHandler } from './$types';
 
 /**
  * Keyless search proxy.
  *
- * Primary source: YouTube Music (WEB_REMIX) search — gives clean artist names,
- * durations and square album art. Fallback: regular YouTube video search for
- * the long tail that the music catalogue doesn't cover.
+ * YouTube Music (WEB_REMIX) gives clean artist names, durations, square album
+ * art, and the album/playlist shelves. A regular YouTube video search covers
+ * the long tail the music catalogue misses.
  */
-
-let innertube: Promise<Innertube> | null = null;
-
-function getInnertube(): Promise<Innertube> {
-	// retrieve_player:false skips downloading the player script — we only search.
-	innertube ??= Innertube.create({ lang: 'en', location: 'US', retrieve_player: false });
-	return innertube;
-}
-
-interface MusicItemLike {
-	id?: string;
-	title?: string;
-	duration?: { seconds?: number };
-	artists?: Array<{ name?: string }>;
-	author?: { name?: string };
-	thumbnail?: { contents?: Array<{ url?: string }>; url?: string };
-}
-
-interface VideoItemLike {
-	id?: string;
-	video_id?: string;
-	title?: string | { text?: string };
-	author?: { name?: string };
-	duration?: { seconds?: number };
-	thumbnails?: Array<{ url?: string }>;
-}
-
-function fromMusicItem(item: MusicItemLike): Track | null {
-	if (!item.id) return null;
-	const artist =
-		item.artists
-			?.map((a) => a.name)
-			.filter(Boolean)
-			.join(', ') ||
-		item.author?.name ||
-		'Unknown artist';
-	const art = item.thumbnail?.contents?.[0]?.url ?? item.thumbnail?.url ?? '';
-	return {
-		id: item.id,
-		title: cleanTitle(item.title ?? 'Untitled'),
-		artist,
-		duration: Math.round(item.duration?.seconds ?? 0),
-		art: upscaleArt(art),
-		source: 'music'
-	};
-}
-
-function fromVideoItem(item: VideoItemLike): Track | null {
-	const id = item.id ?? item.video_id;
-	if (!id) return null;
-	const rawTitle = typeof item.title === 'string' ? item.title : (item.title?.text ?? 'Untitled');
-	const split = splitArtistTitle(rawTitle);
-	const author = item.author?.name ?? '';
-	return {
-		id,
-		title: split ? split.title : cleanTitle(rawTitle),
-		artist: split ? split.artist : author || 'YouTube',
-		duration: Math.round(item.duration?.seconds ?? 0),
-		art: item.thumbnails?.[0]?.url ?? `https://i.ytimg.com/vi/${id}/hqdefault.jpg`,
-		source: 'video'
-	};
-}
 
 export const GET: RequestHandler = async ({ url, setHeaders }) => {
 	const q = (url.searchParams.get('q') ?? '').trim();
@@ -81,28 +26,47 @@ export const GET: RequestHandler = async ({ url, setHeaders }) => {
 
 	const yt = await getInnertube();
 	const tracks: Track[] = [];
+	const albums: Collection[] = [];
+	const playlists: Collection[] = [];
 	const seen = new Set<string>();
 
-	try {
-		const music = await yt.music.search(q, { type: 'song' });
-		const items = (music.songs?.contents ?? []) as unknown as MusicItemLike[];
-		for (const item of items) {
-			const track = fromMusicItem(item);
+	const [songs, albumSearch, playlistSearch] = await Promise.allSettled([
+		yt.music.search(q, { type: 'song' }),
+		yt.music.search(q, { type: 'album' }),
+		yt.music.search(q, { type: 'playlist' })
+	]);
+
+	if (songs.status === 'fulfilled') {
+		for (const item of songs.value.songs?.contents ?? []) {
+			const track = fromMusicItem(item as unknown as MusicItemLike);
 			if (track && !seen.has(track.id)) {
 				seen.add(track.id);
 				tracks.push(track);
 			}
 		}
-	} catch {
-		/* music search can fail on rare queries — the video fallback below covers us */
+	}
+
+	if (albumSearch.status === 'fulfilled') {
+		for (const item of albumSearch.value.albums?.contents ?? []) {
+			const album = toCollection(item as unknown as TwoRowItemLike, 'album');
+			if (album) albums.push(album);
+			if (albums.length >= 8) break;
+		}
+	}
+
+	if (playlistSearch.status === 'fulfilled') {
+		for (const item of playlistSearch.value.playlists?.contents ?? []) {
+			const playlist = toCollection(item as unknown as TwoRowItemLike, 'playlist');
+			if (playlist) playlists.push(playlist);
+			if (playlists.length >= 8) break;
+		}
 	}
 
 	if (tracks.length < 8) {
 		try {
 			const videos = await yt.search(q, { type: 'video' });
-			const items = (videos.videos ?? []) as unknown as VideoItemLike[];
-			for (const item of items) {
-				const track = fromVideoItem(item);
+			for (const item of videos.videos ?? []) {
+				const track = fromVideoItem(item as unknown as VideoItemLike);
 				if (track && !seen.has(track.id)) {
 					seen.add(track.id);
 					tracks.push(track);
@@ -114,11 +78,13 @@ export const GET: RequestHandler = async ({ url, setHeaders }) => {
 		}
 	}
 
-	if (!tracks.length) throw error(404, 'Nothing found for that');
+	if (!tracks.length && !albums.length && !playlists.length) {
+		throw error(404, 'Nothing found for that');
+	}
 
 	setHeaders({
 		// popular searches get cached at the edge — faster and lighter on YouTube
 		'cache-control': 'public, s-maxage=3600, stale-while-revalidate=86400'
 	});
-	return json({ tracks: tracks.slice(0, 24) });
+	return json({ tracks: tracks.slice(0, 24), albums, playlists });
 };

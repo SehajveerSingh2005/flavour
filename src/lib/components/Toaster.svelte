@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { toasts } from '$lib/toasts.svelte';
 	import { fly } from 'svelte/transition';
+	import Icon from './Icon.svelte';
 </script>
 
 <div class="toaster">
@@ -13,7 +14,8 @@
 			onclick={() => toasts.dismiss(toast.id)}
 			title="Dismiss"
 		>
-			{toast.text}
+			<Icon name={toast.tone === 'error' ? 'alert' : toast.tone === 'accent' ? 'sparkles' : 'check'} size={15} />
+			<span>{toast.text}</span>
 		</button>
 	{/each}
 </div>
@@ -29,6 +31,9 @@
 		max-width: min(360px, calc(100vw - 36px));
 	}
 	.toast {
+		display: flex;
+		align-items: center;
+		gap: 8px;
 		padding: 0.6rem 0.9rem;
 		font-size: 0.85rem;
 		font-weight: 600;

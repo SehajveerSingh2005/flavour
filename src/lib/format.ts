@@ -15,6 +15,16 @@ export function formatDuration(totalSeconds: number): string {
 	return formatTime(totalSeconds);
 }
 
+/** Total runtime for a list — "48 min", "1h 12m" or an em dash. */
+export function formatRuntime(totalSeconds: number): string {
+	if (!Number.isFinite(totalSeconds) || totalSeconds <= 0) return '—';
+	const minutes = Math.round(totalSeconds / 60);
+	if (minutes < 60) return `${minutes} min`;
+	const hours = Math.floor(minutes / 60);
+	const rest = minutes % 60;
+	return rest ? `${hours}h ${String(rest).padStart(2, '0')}m` : `${hours}h`;
+}
+
 /** Bump YouTube Music art from its default 120px to something album-art sized. */
 export function upscaleArt(url: string, size = 544): string {
 	if (!url) return '';

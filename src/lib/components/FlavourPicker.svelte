@@ -2,6 +2,7 @@
 	import { FLAVOURS, getFlavour } from '$lib/flavours';
 	import { theme } from '$lib/theme.svelte';
 	import { fly } from 'svelte/transition';
+	import Icon from './Icon.svelte';
 
 	let open = $state(false);
 	let wrap = $state<HTMLDivElement | null>(null);
@@ -30,7 +31,7 @@
 	>
 		<span class="swatch" style="--a:{active.swatch[0]}; --b:{active.swatch[1]}"></span>
 		<span class="label">{active.name}</span>
-		<span class="caret" class:up={open}>▾</span>
+		<span class="caret" class:up={open}><Icon name="chevron-down" size={14} /></span>
 	</button>
 
 	{#if open}
@@ -56,7 +57,7 @@
 								<em>{flavour.note}</em>
 							</span>
 							{#if flavour.id === theme.current}
-								<span class="tick">✓</span>
+								<span class="tick"><Icon name="check" size={16} /></span>
 							{/if}
 						</button>
 					</li>
@@ -86,7 +87,8 @@
 		border-radius: 10px;
 	}
 	.caret {
-		font-size: 0.8rem;
+		display: grid;
+		place-items: center;
 		transition: transform 0.2s ease;
 	}
 	.caret.up {
@@ -148,7 +150,9 @@
 		color: var(--muted);
 	}
 	.tick {
-		font-weight: 800;
+		display: grid;
+		place-items: center;
+		color: var(--accent);
 	}
 	@media (max-width: 560px) {
 		.label {

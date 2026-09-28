@@ -78,75 +78,111 @@ function state() {
 	return page.evaluate(() => {
 		const txt = (selector) => document.querySelector(selector)?.textContent?.trim() ?? null;
 		const host = document.querySelector('#yt-host');
+		const play = document.querySelector('.np .play');
 		return {
+			route: location.pathname + location.search,
 			theme: document.documentElement.dataset.theme,
-			title: txt('.np .title'),
-			artist: txt('.np .artist'),
-			position: txt('.np .times span'),
-			duration: txt('.np .times span:last-child'),
-			playIcon: txt('.np .play'),
+			title: txt('.np .overlay-title') ?? txt('.np .bar-meta strong'),
+			artist: txt('.np .overlay-artist') ?? txt('.np .bar-meta em'),
+			position: txt('.np .scrub-row .time'),
+			remaining: txt('.np .scrub-row .time:last-child'),
+			playState: play?.getAttribute('data-state') ?? null,
 			ytTag: host?.tagName ?? null,
-			results: document.querySelectorAll('.rows .row').length,
-			queueCount: document.querySelectorAll('.list .row').length
+			results: document.querySelectorAll('.tray .rows .row').length,
+			mixes: JSON.parse(localStorage.getItem('flavour:mixes') || '[]').length
 		};
 	});
 }
 
-// 1 ── load
+// 1 ── first run: home, nothing anywhere
 await page.goto(BASE, { waitUntil: 'domcontentloaded' });
+await page.evaluate(() => {
+	for (const key of ['flavour:queue', 'flavour:history', 'flavour:mixes', 'flavour:recents', 'flavour:panels']) {
+		localStorage.removeItem(key);
+	}
+});
+await page.reload({ waitUntil: 'domcontentloaded' });
 await waitFor(() => !!document.querySelector('#yt-host'), 20000, 'youtube host');
 await page.evaluate(() => document.fonts?.ready);
-await sleep(1200);
-await shoot('01-empty-matcha');
+await sleep(1000);
+await shoot('01-home-matcha');
 
 // 2 ── flavour switch
 await page.click('.picker-btn');
 await sleep(350);
 console.log('flavour picked:', await pickFlavour('Taro'));
 await sleep(500);
-await shoot('02-empty-taro');
+await shoot('02-home-taro');
 
-// 3 ── search then results
+// 3 ── typing floats: live results over the page
 await page.click('#search-input');
 await page.type('#search-input', QUERY, { delay: 25 });
-await waitFor(() => document.querySelectorAll('.rows .row').length > 0, 20000, 'search results');
-await sleep(800);
-await shoot('03-results-taro');
+await waitFor(() => document.querySelectorAll('.panel .track-row').length > 0, 20000, 'overlay results');
+await sleep(600);
+await shoot('03-search-overlay');
 
-// 4 ── lucky: play the top hit
-await page.click('form .btn--pop');
+// 4 ── enter commits to the results page
+await page.keyboard.press('Enter');
+await waitFor(() => location.pathname === '/search', 10000, 'search route');
+await waitFor(() => document.querySelectorAll('.tray .rows .row').length > 0, 20000, 'search results');
+await sleep(800);
+await shoot('04-results-taro');
+
+// 5 ── play the top hit
+await page.evaluate(() => document.querySelector('.tray .rows .row .hit')?.click());
 await waitFor(
 	() => {
-		const t = document.querySelector('.np .times span')?.textContent?.trim();
+		const t = document.querySelector('.np .scrub-row .time')?.textContent?.trim();
 		return !!t && t !== '0:00';
 	},
 	25000,
 	'playback to advance'
 );
-await sleep(1500);
-await shoot('04-playing-taro');
+await sleep(1200);
+await shoot('05-playing-taro');
 console.log('while playing:', JSON.stringify(await state(), null, 1));
 
-// 5 ── immersive mode
+// 6 ── immersive mode
 await page.click('.np .watch');
 await sleep(1600);
-await shoot('05-immersive');
+await shoot('06-immersive');
 await page.keyboard.press('Escape');
 await sleep(700);
 
-// 6 ── queue tab
-await page.click('.tabs .tab:nth-child(2)');
-await sleep(500);
-await shoot('06-queue');
+// 7 ── queue open: the deck folds to a bar, the list takes the rail
+await page.click('.queue-card .toggle');
+await sleep(900);
+await shoot('07-queue');
+await page.click('.np .bar-btn');
+await sleep(600);
 
-// 7 ── dark flavour
+// 8 ── save an album as a mix, then visit it
+await page.evaluate(() => document.querySelector('.side-card .coll .save')?.click());
+await waitFor(() => JSON.parse(localStorage.getItem('flavour:mixes') || '[]').length > 0, 20000, 'mix saved');
+await sleep(500);
+await page.goto(`${BASE}/mixes`, { waitUntil: 'domcontentloaded' });
+await waitFor(() => !!document.querySelector('.mix-tile'), 10000, 'mix tiles');
+await sleep(600);
+await page.evaluate(() => document.querySelector('.mix-tile')?.click());
+await waitFor(() => location.pathname.startsWith('/mixes/'), 10000, 'mix route');
+await sleep(900);
+await shoot('10-mix-page');
+
+// 9 ── dark flavour
+await page.goto(BASE, { waitUntil: 'domcontentloaded' });
+await sleep(800);
 await page.click('.picker-btn');
 await sleep(350);
 console.log('flavour picked:', await pickFlavour('Espresso'));
 await sleep(600);
-await page.click('.tabs .tab:nth-child(1)');
-await sleep(400);
-await shoot('07-playing-espresso');
+await shoot('08-espresso');
+
+// 10 ── cheat sheet
+await page.keyboard.press('?');
+await sleep(500);
+await shoot('09-shortcuts');
+await page.keyboard.press('Escape');
+await sleep(300);
 
 console.log('final:', JSON.stringify(await state(), null, 1));
 console.log('problems:', problems.length ? problems : 'none');

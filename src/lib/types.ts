@@ -18,3 +18,13 @@ export interface QueueItem extends Track {
 
 export type RepeatMode = 'off' | 'all' | 'one';
 export type PlayerStatus = 'idle' | 'loading' | 'playing' | 'paused' | 'buffering';
+
+/** An album or playlist card in the browse shelves */
+export interface Collection {
+	id: string;
+	kind: 'album' | 'playlist';
+	title: string;
+	/** artist / author / year line */
+	subtitle: string;
+	art: string;
+}

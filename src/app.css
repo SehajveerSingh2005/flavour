@@ -11,6 +11,7 @@
 	--pill: 999px;
 	--font-display: 'Bricolage Grotesque', 'Space Grotesk', system-ui, sans-serif;
 	--font-body: 'Space Grotesk', system-ui, sans-serif;
+	--font-mono: 'Space Mono', ui-monospace, 'SFMono-Regular', monospace;
 	--shadow: 6px 6px 0 var(--ink);
 	--shadow-sm: 4px 4px 0 var(--ink);
 	--shadow-lg: 10px 10px 0 var(--ink);
@@ -19,6 +20,8 @@
 	--accent-soft: color-mix(in srgb, var(--accent) 16%, var(--surface));
 	--ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
 	--t: 0.16s var(--ease-pop);
+	/* sticky topbar height — things that stick beneath it use this */
+	--topbar: 72px;
 }
 
 /* ---------- flavours ---------- */
@@ -439,6 +442,21 @@ input[type='range'].slider::-moz-range-thumb {
 	}
 }
 
+@keyframes spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+.spinner {
+	width: 1em;
+	height: 1em;
+	border: 3px solid color-mix(in srgb, currentColor 25%, transparent);
+	border-top-color: currentColor;
+	border-radius: 50%;
+	animation: spin 0.7s linear infinite;
+}
+
 @keyframes sticker-in {
 	from {
 		opacity: 0;
@@ -456,6 +474,28 @@ input[type='range'].slider::-moz-range-thumb {
 	font-weight: 800;
 	letter-spacing: -0.02em;
 	line-height: 1.05;
+}
+.mono {
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+	letter-spacing: -0.01em;
+}
+.grow {
+	flex: 1;
+}
+kbd {
+	display: inline-block;
+	padding: 0.14em 0.45em;
+	border: 2px solid var(--ink);
+	border-bottom-width: 3px;
+	border-radius: 7px;
+	background: var(--surface);
+	font-family: var(--font-mono);
+	font-size: 0.76em;
+	font-weight: 700;
+	line-height: 1.3;
+	box-shadow: 1px 1px 0 var(--ink);
+	white-space: nowrap;
 }
 .muted {
 	color: var(--muted);

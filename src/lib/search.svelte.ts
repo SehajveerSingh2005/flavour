@@ -1,11 +1,13 @@
 import { browser } from '$app/environment';
-import type { Track } from './types';
+import type { Collection, Track } from './types';
 
 const RECENTS_KEY = 'flavour:recents';
 
 function createSearch() {
 	let query = $state('');
 	let results = $state<Track[]>([]);
+	let albums = $state<Collection[]>([]);
+	let playlists = $state<Collection[]>([]);
 	let loading = $state(false);
 	let error = $state<string | null>(null);
 	let lastQuery = $state('');
@@ -37,30 +39,48 @@ function createSearch() {
 		}
 	}
 
-	async function run(raw: string): Promise<Track[]> {
-		const q = raw.trim();
-		if (q.length < 2) return [];
+	function clearRecents() {
+		recents = [];
+		try {
+			localStorage.removeItem(RECENTS_KEY);
+		} catch {
+			/* storage unavailable */
+		}
+	}
+
+	interface Request {
+		url: string;
+		/** what the results belong to — a query or a pasted link */
+		label: string;
+		remember: boolean;
+	}
+
+	async function load({ url, label, remember: doRemember }: Request): Promise<Track[]> {
 		controller?.abort();
 		const localController = new AbortController();
 		controller = localController;
 		const id = ++requestId;
 		loading = true;
 		error = null;
-		query = q;
+		query = label;
 
 		try {
-			const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`, {
-				signal: localController.signal
-			});
+			const res = await fetch(url, { signal: localController.signal });
 			if (!res.ok) {
 				const body = (await res.json().catch(() => null)) as { message?: string } | null;
-				throw new Error(body?.message ?? `Search failed (${res.status})`);
+				throw new Error(body?.message ?? `Request failed (${res.status})`);
 			}
-			const data = (await res.json()) as { tracks?: Track[] };
+			const data = (await res.json()) as {
+				tracks?: Track[];
+				albums?: Collection[];
+				playlists?: Collection[];
+			};
 			if (id !== requestId) return [];
 			results = data.tracks ?? [];
-			lastQuery = q;
-			if (results.length) remember(q);
+			albums = data.albums ?? [];
+			playlists = data.playlists ?? [];
+			lastQuery = label;
+			if (results.length && doRemember) remember(label);
 			return results;
 		} catch (e) {
 			if (e instanceof DOMException && e.name === 'AbortError') return [];
@@ -72,12 +92,40 @@ function createSearch() {
 		}
 	}
 
+	/** Plain text search. */
+	async function run(raw: string): Promise<Track[]> {
+		const q = raw.trim();
+		if (q.length < 2) return [];
+		return load({
+			url: `/api/search?q=${encodeURIComponent(q)}`,
+			label: q,
+			remember: true
+		});
+	}
+
+	/** Resolve a pasted YouTube video/playlist link. */
+	async function runLink(raw: string): Promise<Track[]> {
+		const q = raw.trim();
+		if (!q) return [];
+		return load({
+			url: `/api/resolve?url=${encodeURIComponent(q)}`,
+			label: q,
+			remember: false
+		});
+	}
+
 	return {
 		get query() {
 			return query;
 		},
 		get results() {
 			return results;
+		},
+		get albums() {
+			return albums;
+		},
+		get playlists() {
+			return playlists;
 		},
 		get loading() {
 			return loading;
@@ -96,12 +144,16 @@ function createSearch() {
 		},
 		clear() {
 			results = [];
+			albums = [];
+			playlists = [];
 			lastQuery = '';
 			query = '';
 			error = null;
 		},
 		run,
-		hydrate
+		runLink,
+		hydrate,
+		clearRecents
 	};
 }
 

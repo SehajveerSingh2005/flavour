@@ -1,22 +1,40 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { player } from '$lib/player.svelte';
+	import Icon from './Icon.svelte';
 
 	const loading = $derived(player.status === 'loading' || player.status === 'buffering');
+
+	// On desktop the shell keeps the stage in view; if a short window still
+	// lets it scroll away, dock a mini player so controls stay reachable.
+	let fallback = $state(false);
+
+	onMount(() => {
+		const hero = document.querySelector('.np');
+		if (!hero || typeof IntersectionObserver === 'undefined') return;
+		const observer = new IntersectionObserver(
+			([entry]) => (fallback = !entry.isIntersecting),
+			{ threshold: 0.2 }
+		);
+		observer.observe(hero);
+		return () => observer.disconnect();
+	});
 </script>
 
 {#if player.current}
-	<div class="mini">
+	<div class="mini" class:fallback>
 		<div class="progress"><span style="width:{player.progress * 100}%"></span></div>
 		<div class="inner">
 			<button
 				class="art-btn"
 				onclick={() => player.setImmersive(true)}
 				title="Watch the video"
+				aria-label="Watch the video"
 			>
 				{#if player.current.art}
 					<img class="art squircle" src={player.current.art} alt="" referrerpolicy="no-referrer" />
 				{:else}
-					<span class="art fallback squircle">🎧</span>
+					<span class="art fallback squircle"><Icon name="music" size={20} /></span>
 				{/if}
 			</button>
 			<div class="meta">
@@ -24,11 +42,30 @@
 				<em class="truncate">{player.current.artist}</em>
 			</div>
 			<div class="controls">
-				<button class="btn btn--icon" title="Previous" onclick={() => player.prev()}>⏮</button>
-				<button class="btn btn--icon play" title="Play / pause" onclick={() => player.togglePlay()}>
-					{loading ? '•••' : player.isPlaying ? '⏸' : '▶'}
+				<button
+					class="btn btn--icon"
+					title="Previous"
+					aria-label="Previous track"
+					onclick={() => player.prev()}
+				>
+					<Icon name="skip-back" size={17} />
 				</button>
-				<button class="btn btn--icon" title="Next" onclick={() => player.next()}>⏭</button>
+				<button
+					class="btn play"
+					data-state={player.isPlaying ? 'playing' : 'paused'}
+					title="Play / pause"
+					aria-label="Play or pause"
+					onclick={() => player.togglePlay()}
+				>
+					{#if loading}
+						<span class="spinner"></span>
+					{:else}
+						<Icon name={player.isPlaying ? 'pause' : 'play'} size={20} stroke={2.4} />
+					{/if}
+				</button>
+				<button class="btn btn--icon" title="Next" aria-label="Next track" onclick={() => player.next()}>
+					<Icon name="skip-forward" size={17} />
+				</button>
 			</div>
 		</div>
 	</div>
@@ -77,7 +114,7 @@
 	.art.fallback {
 		display: grid;
 		place-items: center;
-		font-size: 1.2rem;
+		color: var(--muted);
 	}
 	.meta {
 		display: grid;
@@ -106,13 +143,22 @@
 	.controls .play {
 		width: 48px;
 		height: 48px;
-		font-size: 1.1rem;
 		background: var(--accent);
 		color: var(--accent-ink);
 		border-radius: 16px;
 	}
+	.controls .spinner {
+		width: 15px;
+		height: 15px;
+		border-width: 2.5px;
+	}
 	@media (max-width: 900px) {
 		.mini {
+			display: block;
+		}
+	}
+	@media (min-width: 901px) {
+		.mini.fallback {
 			display: block;
 		}
 	}

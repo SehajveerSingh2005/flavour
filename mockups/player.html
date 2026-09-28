@@ -1,0 +1,1518 @@
+<!doctype html>
+<html lang="en" data-theme="matcha">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>FLAVOUR — deck &amp; queue boards</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap"
+			rel="stylesheet"
+		/>
+		<style>
+			/* ============================================================
+			   deck & queue board sheet — matcha flavour, 1:1
+			   ============================================================ */
+			:root {
+				--bg: #e9f2da;
+				--surface: #f6fbea;
+				--surface-2: #d9e8c2;
+				--ink: #182610;
+				--accent: #3d7a26;
+				--accent-ink: #f2f8e7;
+				--pop: #e9a13b;
+				--muted: color-mix(in srgb, var(--ink) 62%, transparent);
+				--faint: color-mix(in srgb, var(--ink) 13%, transparent);
+				--accent-soft: color-mix(in srgb, var(--accent) 13%, var(--surface));
+				--radius: 24px;
+				--pill: 999px;
+				--bw: 3px;
+				--shadow: 6px 6px 0 var(--ink);
+				--shadow-sm: 4px 4px 0 var(--ink);
+				--font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+				--font-body: 'Space Grotesk', system-ui, sans-serif;
+				--font-mono: 'Space Mono', ui-monospace, monospace;
+			}
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				margin: 0;
+				font-family: var(--font-body);
+				background: #17151f;
+				color: #cfc9de;
+				padding: 28px 34px 60px;
+			}
+			.head {
+				max-width: 1200px;
+				margin-bottom: 26px;
+			}
+			.head h1 {
+				font-family: var(--font-display);
+				font-weight: 800;
+				font-size: 25px;
+				letter-spacing: -0.02em;
+				color: #fff;
+				margin: 0 0 6px;
+			}
+			.head p {
+				margin: 0;
+				font-size: 14px;
+				color: #9d96b5;
+				max-width: 96ch;
+				line-height: 1.55;
+			}
+			.gallery {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 40px;
+				align-items: flex-start;
+			}
+			.col {
+				display: grid;
+				gap: 14px;
+			}
+			.col-label {
+				font-family: var(--font-mono);
+				font-size: 12px;
+				letter-spacing: 0.06em;
+				text-transform: uppercase;
+				color: #b9b2d0;
+			}
+			.note {
+				font-size: 12.5px;
+				color: #8d86a5;
+				line-height: 1.5;
+			}
+			.railwrap {
+				width: 356px;
+				padding: 16px;
+				background: var(--bg);
+				border-radius: 22px;
+				display: grid;
+				gap: 14px;
+				align-content: start;
+				color: var(--ink);
+			}
+			.railwrap.tall {
+				min-height: 780px;
+			}
+			.flowwrap {
+				background: var(--bg);
+				border-radius: 22px;
+				padding: 16px;
+			}
+
+			/* ---------- primitives ---------- */
+			.card {
+				background: var(--surface);
+				border: var(--bw) solid var(--ink);
+				border-radius: var(--radius);
+				box-shadow: var(--shadow);
+			}
+			.mono {
+				font-family: var(--font-mono);
+			}
+			.label {
+				font-size: 10.5px;
+				font-weight: 700;
+				text-transform: uppercase;
+				letter-spacing: 0.09em;
+				color: var(--muted);
+			}
+			.display {
+				font-family: var(--font-display);
+				font-weight: 800;
+				letter-spacing: -0.02em;
+				line-height: 1.05;
+				margin: 0;
+			}
+			.grow {
+				flex: 1;
+			}
+			.truncate {
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+			.ic {
+				width: 18px;
+				height: 18px;
+				fill: none;
+				stroke: currentColor;
+				stroke-width: 2.2;
+				stroke-linecap: round;
+				stroke-linejoin: round;
+				display: block;
+			}
+			.ib {
+				display: inline-grid;
+				place-items: center;
+				width: 36px;
+				height: 36px;
+				border: 2px solid var(--ink);
+				border-radius: 12px;
+				background: var(--surface);
+				box-shadow: 2px 2px 0 var(--ink);
+				color: var(--ink);
+				cursor: pointer;
+				flex: none;
+			}
+			.ib.tiny {
+				width: 30px;
+				height: 30px;
+				border-radius: 10px;
+			}
+			.ib.on {
+				background: var(--accent);
+				color: var(--accent-ink);
+			}
+			.eq {
+				display: inline-flex;
+				align-items: flex-end;
+				gap: 2px;
+				height: 12px;
+			}
+			.eq i {
+				width: 3px;
+				height: 100%;
+				background: currentColor;
+				border-radius: 2px;
+				transform-origin: bottom;
+				animation: eq 0.9s ease-in-out infinite;
+			}
+			.eq i:nth-child(2) {
+				animation-delay: 0.15s;
+			}
+			.eq i:nth-child(3) {
+				animation-delay: 0.3s;
+			}
+			.eq i:nth-child(4) {
+				animation-delay: 0.45s;
+			}
+			@keyframes eq {
+				0%,
+				100% {
+					transform: scaleY(0.3);
+				}
+				50% {
+					transform: scaleY(1);
+				}
+			}
+			.cover {
+				position: relative;
+				border: 2px solid var(--ink);
+				border-radius: 14px;
+				overflow: hidden;
+				background: linear-gradient(135deg, #b9a6e8, #6d4bb8);
+				flex: none;
+			}
+			.cover::before {
+				content: '';
+				position: absolute;
+				inset: -30% -10% auto auto;
+				width: 80%;
+				aspect-ratio: 1;
+				border-radius: 50%;
+				background: rgb(255 255 255 / 0.22);
+			}
+			.cover::after {
+				content: '';
+				position: absolute;
+				inset: 26%;
+				border-radius: 50%;
+				border: 2px solid rgb(24 38 16 / 0.75);
+				background: radial-gradient(circle at 50% 50%, #f6fbea 0 18%, #182610 19% 100%);
+			}
+			.cover.c2 {
+				background: linear-gradient(135deg, #9fd8a8, #2f8f45);
+			}
+			.cover.c3 {
+				background: linear-gradient(135deg, #ffd79a, #e07a3f);
+			}
+			.cover.c4 {
+				background: linear-gradient(135deg, #f3b0a8, #c24040);
+			}
+			.cover.c5 {
+				background: linear-gradient(135deg, #a8c7f3, #3f63c2);
+			}
+			.cover.c6 {
+				background: linear-gradient(135deg, #d7e8a8, #7f9c3f);
+			}
+			.cover.c7 {
+				background: linear-gradient(135deg, #d9c9ff, #8a5cd6);
+			}
+			.cover.c8 {
+				background: linear-gradient(135deg, #7fd8c8, #2f8f83);
+			}
+			.cover.dark {
+				background: linear-gradient(150deg, #2b2b33, #101014);
+			}
+			.disc {
+				position: absolute;
+				top: 50%;
+				left: 74%;
+				width: 92%;
+				aspect-ratio: 1;
+				border-radius: 50%;
+				border: 3px solid var(--ink);
+				background:
+					repeating-radial-gradient(
+						circle at 50% 50%,
+						rgb(255 255 255 / 0.08) 0 1px,
+						transparent 1px 4px
+					),
+					radial-gradient(circle at 50% 50%, #4d4d5c 0 16%, #1c1c26 17% 97%, #31313f 98%);
+				box-shadow: var(--shadow);
+			}
+
+			/* ---------- shared bits ---------- */
+			.scrub-row {
+				display: grid;
+				grid-template-columns: auto minmax(0, 1fr) auto;
+				align-items: center;
+				gap: 9px;
+				width: 100%;
+			}
+			.scrub-row .time {
+				font-size: 10.5px;
+				color: var(--muted);
+				font-variant-numeric: tabular-nums;
+			}
+			.bar {
+				position: relative;
+				height: 10px;
+				border: 2px solid var(--ink);
+				border-radius: var(--pill);
+				background: var(--surface-2);
+			}
+			.bar .fill {
+				position: absolute;
+				inset: 0 62% 0 0;
+				background: var(--accent);
+				border-radius: var(--pill);
+			}
+			.bar .thumb {
+				position: absolute;
+				top: -5px;
+				left: 34%;
+				width: 16px;
+				height: 16px;
+				border: 3px solid var(--ink);
+				border-radius: 6px;
+				background: var(--surface);
+				box-shadow: 2px 2px 0 var(--ink);
+			}
+			.transport {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: 7px;
+			}
+			.transport .ib {
+				width: 38px;
+				height: 38px;
+			}
+			.transport .play {
+				width: 50px;
+				height: 50px;
+				border-radius: 16px;
+				background: var(--accent);
+				color: var(--accent-ink);
+			}
+			.utils {
+				display: flex;
+				align-items: center;
+				gap: 7px;
+				width: 100%;
+			}
+			.volbar {
+				position: relative;
+				height: 10px;
+				flex: 1;
+				border: 2px solid var(--ink);
+				border-radius: var(--pill);
+				background: var(--surface-2);
+			}
+			.volbar .fill {
+				position: absolute;
+				inset: 0 28% 0 0;
+				background: var(--accent);
+				border-radius: var(--pill);
+			}
+			.next-line {
+				display: flex;
+				align-items: center;
+				gap: 5px;
+				font-size: 11px;
+				color: var(--muted);
+				min-width: 0;
+			}
+
+			/* ---------- queue ---------- */
+			.qhead {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				padding: 10px 12px;
+				border-bottom: 2px dashed var(--faint);
+				background: color-mix(in srgb, var(--surface-2) 55%, var(--surface));
+			}
+			.qhead h2 {
+				font-size: 16px;
+				margin: 0;
+			}
+			.qmeta {
+				font-size: 11px;
+				color: var(--muted);
+				white-space: nowrap;
+			}
+			.qbody {
+				display: grid;
+				padding: 6px 9px 10px;
+			}
+			.qrow {
+				display: grid;
+				grid-template-columns: 22px 34px minmax(0, 1fr) auto auto;
+				align-items: center;
+				gap: 9px;
+				padding: 6px 5px;
+				border-bottom: 2px dashed var(--faint);
+				border-radius: 10px;
+			}
+			.qrow:last-of-type {
+				border-bottom: 0;
+			}
+			.qrow.now {
+				background: var(--accent-soft);
+				border-bottom: 0;
+				border-radius: 12px;
+			}
+			.qrow .num {
+				font-family: var(--font-mono);
+				font-size: 11px;
+				color: var(--muted);
+				text-align: center;
+			}
+			.qrow .cover {
+				width: 34px;
+				height: 34px;
+				border-radius: 10px;
+			}
+			.qrow .meta {
+				display: grid;
+				min-width: 0;
+				line-height: 1.18;
+			}
+			.qrow .meta strong {
+				font-size: 13px;
+			}
+			.qrow .meta em {
+				font-style: normal;
+				font-size: 11px;
+				color: var(--muted);
+			}
+			.qrow .dur {
+				font-family: var(--font-mono);
+				font-size: 11px;
+				color: var(--muted);
+			}
+			.qrow .grip {
+				color: var(--muted);
+				opacity: 0.5;
+			}
+			.qrow.now .num {
+				color: var(--accent);
+			}
+			.qmore {
+				padding: 8px 6px 2px;
+				text-align: center;
+			}
+			.qshow {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: 8px;
+				margin: 8px 6px 2px;
+				padding: 9px 10px;
+				border: 2px solid var(--ink);
+				border-radius: var(--pill);
+				background: var(--surface);
+				box-shadow: 2px 2px 0 var(--ink);
+				font-family: var(--font-body);
+				font-weight: 700;
+				font-size: 12.5px;
+				color: var(--ink);
+				cursor: pointer;
+			}
+
+			/* compact deck — the poster after the queue takes over */
+			.mini-deck {
+				display: grid;
+				grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+				align-items: center;
+				gap: 10px;
+				padding: 8px 10px;
+			}
+			.mini-deck .art {
+				position: relative;
+				width: 44px;
+				aspect-ratio: 1;
+			}
+			.mini-deck .art .disc {
+				top: 56%;
+				left: 60%;
+				width: 56%;
+				border-width: 2px;
+			}
+			.mini-deck .art .cover {
+				position: relative;
+				z-index: 1;
+				width: 100%;
+				height: 100%;
+				border-radius: 13px;
+				box-shadow: 2px 2px 0 var(--ink);
+			}
+			.mini-deck .meta {
+				display: grid;
+				min-width: 0;
+				line-height: 1.15;
+			}
+			.mini-deck .meta strong {
+				font-size: 13.5px;
+			}
+			.mini-deck .meta em {
+				font-style: normal;
+				font-size: 11.5px;
+				color: var(--muted);
+			}
+
+			/* ============ VARIANT A — slim deck, queue always on ============ */
+			.deck-a {
+				padding: 14px;
+				display: grid;
+				gap: 11px;
+			}
+			.deck-a .top {
+				display: grid;
+				grid-template-columns: auto minmax(0, 1fr);
+				gap: 13px;
+				align-items: center;
+			}
+			.deck-a .art {
+				position: relative;
+				width: 104px;
+				aspect-ratio: 1;
+				margin-right: 16px;
+			}
+			.deck-a .art .disc {
+				left: 58%;
+				width: 62%;
+			}
+			.deck-a .art .cover {
+				position: relative;
+				z-index: 1;
+				width: 100%;
+				height: 100%;
+				border-radius: 18px;
+				box-shadow: var(--shadow-sm);
+				transform: rotate(-1.2deg);
+			}
+			.deck-a .meta {
+				position: relative;
+				z-index: 2;
+				display: grid;
+				gap: 2px;
+				min-width: 0;
+			}
+			.deck-a .scrub-row,
+			.deck-a .transport,
+			.deck-a .utils {
+				position: relative;
+				z-index: 2;
+			}
+			.deck-a .counter {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				font-size: 10.5px;
+				color: var(--muted);
+			}
+			.deck-a .meta h3 {
+				margin: 0;
+				font-family: var(--font-display);
+				font-weight: 800;
+				font-size: 19px;
+				letter-spacing: -0.02em;
+				line-height: 1.1;
+			}
+			.deck-a .meta p {
+				margin: 0;
+				font-size: 12px;
+				color: var(--muted);
+			}
+
+			/* ============ VARIANT B — cover-forward poster ============ */
+			.deck-b {
+				padding: 14px;
+				display: grid;
+				gap: 11px;
+				overflow: hidden;
+			}
+			.poster {
+				position: relative;
+			}
+			.poster .art {
+				position: relative;
+				width: calc(100% - 28px);
+				margin-right: 28px;
+				aspect-ratio: 1;
+			}
+			.poster .art .disc {
+				top: 52%;
+				left: 64%;
+				width: 46%;
+			}
+			.poster .art .cover {
+				position: relative;
+				z-index: 1;
+				width: 100%;
+				height: 100%;
+				border-radius: 20px;
+				box-shadow: none;
+			}
+			.poster .overlay {
+				position: absolute;
+				inset: auto 0 0 0;
+				z-index: 2;
+				display: grid;
+				gap: 2px;
+				padding: 40px 12px 12px;
+				border-radius: 0 0 18px 18px;
+				background: linear-gradient(transparent, rgb(10 14 8 / 0.86));
+				color: #f6fbea;
+			}
+			.poster .overlay .label {
+				color: color-mix(in srgb, #f6fbea 70%, transparent);
+			}
+			.poster .overlay h3 {
+				margin: 0;
+				font-family: var(--font-display);
+				font-weight: 800;
+				font-size: 21px;
+				letter-spacing: -0.02em;
+			}
+			.poster .overlay p {
+				margin: 0;
+				font-size: 12px;
+				color: color-mix(in srgb, #f6fbea 78%, transparent);
+			}
+
+			/* ============ VARIANT C — docked player bar ============ */
+			.page-strip {
+				width: 940px;
+				background: var(--bg);
+				border-radius: 22px;
+				overflow: hidden;
+				padding: 18px 18px 0;
+				color: var(--ink);
+			}
+			.fake-page {
+				display: grid;
+				grid-template-columns: repeat(4, 1fr);
+				gap: 14px;
+				padding-bottom: 18px;
+			}
+			.fake-page .cover {
+				width: 100%;
+				aspect-ratio: 1;
+				border-radius: 16px;
+				box-shadow: var(--shadow-sm);
+			}
+			.playerbar {
+				position: relative;
+				display: grid;
+				grid-template-columns: auto minmax(0, 1fr) auto auto;
+				align-items: center;
+				gap: 16px;
+				padding: 12px 16px 14px;
+				background: var(--surface);
+				border-top: var(--bw) solid var(--ink);
+			}
+			.pb-progress {
+				position: absolute;
+				top: -2px;
+				left: 0;
+				right: 0;
+				height: 8px;
+				background: var(--surface-2);
+				border-bottom: 2px solid var(--ink);
+			}
+			.pb-progress span {
+				display: block;
+				height: 100%;
+				width: 34%;
+				background: var(--accent);
+				border-right: 2px solid var(--ink);
+			}
+			.pb-art {
+				position: relative;
+				width: 64px;
+				aspect-ratio: 1;
+				margin-right: 14px;
+			}
+			.pb-art .disc {
+				left: 66%;
+				width: 84%;
+				border-width: 2px;
+			}
+			.pb-art .cover {
+				position: relative;
+				z-index: 1;
+				width: 100%;
+				height: 100%;
+				border-radius: 14px;
+				box-shadow: 2px 2px 0 var(--ink);
+			}
+			.pb-meta {
+				display: grid;
+				min-width: 0;
+				line-height: 1.2;
+			}
+			.pb-meta strong {
+				font-size: 14.5px;
+			}
+			.pb-meta em {
+				font-style: normal;
+				font-size: 12px;
+				color: var(--muted);
+			}
+			.pb-right {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+			}
+			.pb-time {
+				font-size: 11px;
+				color: var(--muted);
+			}
+
+			/* queue drawer */
+			.drawerwrap {
+				width: 380px;
+				background: linear-gradient(160deg, #223019, #131c10);
+				border-radius: 22px;
+				padding: 18px 18px 18px 40px;
+				display: grid;
+				align-content: start;
+				gap: 12px;
+				position: relative;
+				overflow: hidden;
+				color: var(--ink);
+			}
+			.drawerwrap .label {
+				color: color-mix(in srgb, #f6fbea 60%, transparent);
+			}
+			.ghost-rows {
+				display: grid;
+				gap: 8px;
+				opacity: 0.35;
+				filter: blur(0.4px);
+			}
+			.ghost-rows .ghost {
+				height: 44px;
+				border-radius: 12px;
+				background: rgb(246 251 234 / 0.14);
+			}
+			.queue-drawer {
+				position: absolute;
+				top: 18px;
+				right: 18px;
+				bottom: 18px;
+				width: 340px;
+				display: grid;
+				grid-template-rows: auto minmax(0, 1fr);
+				overflow: hidden;
+			}
+
+			/* ---------- empties ---------- */
+			.empty-deck {
+				padding: 18px 16px;
+				display: grid;
+				justify-items: center;
+				gap: 10px;
+				text-align: center;
+			}
+			.empty-deck .doodle {
+				position: relative;
+				width: 74px;
+				aspect-ratio: 1;
+			}
+			.empty-deck .doodle .disc {
+				left: 58%;
+				width: 68%;
+			}
+			.empty-deck .doodle .cover {
+				position: relative;
+				z-index: 1;
+				width: 100%;
+				height: 100%;
+				border-radius: 20px;
+				display: grid;
+				place-items: center;
+				background: var(--surface-2);
+				color: var(--muted);
+			}
+			.empty-deck h3 {
+				position: relative;
+				z-index: 2;
+				margin: 0;
+				font-family: var(--font-display);
+				font-weight: 800;
+				font-size: 17px;
+			}
+			.empty-deck p {
+				position: relative;
+				z-index: 2;
+				margin: 0;
+				font-size: 12px;
+				color: var(--muted);
+				max-width: 30ch;
+			}
+			.empty-deck .ib {
+				position: relative;
+				z-index: 2;
+			}
+			.empty-queue {
+				padding: 24px 18px 26px;
+				display: grid;
+				justify-items: center;
+				gap: 8px;
+				text-align: center;
+			}
+			.empty-queue .icon {
+				display: grid;
+				place-items: center;
+				width: 46px;
+				height: 46px;
+				border: 2px solid var(--ink);
+				border-radius: 15px;
+				background: var(--surface-2);
+				color: var(--muted);
+			}
+			.empty-queue strong {
+				font-size: 14px;
+			}
+			.empty-queue p {
+				margin: 0;
+				font-size: 12px;
+				color: var(--muted);
+				max-width: 32ch;
+			}
+		</style>
+	</head>
+	<body>
+		<header class="head">
+			<h1>deck &amp; queue — three ways</h1>
+			<p>
+				The current rail stacks eight unrelated rows and hides the queue behind an accordion.
+				Same content, three shapes. Everything is 1:1 — the grey sheet is the 356px rail, the
+				wide one is the page bottom.
+			</p>
+		</header>
+
+		<main class="gallery">
+			<!-- ================= VARIANT A ================= -->
+			<div class="col">
+				<span class="col-label">A · slim deck + queue always on</span>
+				<div class="railwrap tall">
+					<section class="card deck-a">
+						<div class="top">
+							<div class="art">
+								<div class="disc"></div>
+								<div class="cover dark"></div>
+							</div>
+							<div class="meta">
+								<span class="counter mono">
+									<span>6 / 32 · 2h 04m queued</span>
+								</span>
+								<h3 class="truncate">Low Fade</h3>
+								<p class="truncate">Karan Aujla, Mxrci</p>
+								<span class="next-line truncate">
+									<svg class="ic" style="width: 13px; height: 13px" viewBox="0 0 24 24">
+										<path d="m15 10 5 5-5 5"></path>
+										<path d="M4 4v7a4 4 0 0 0 4 4h12"></path>
+									</svg>
+									next · Sunflower — Rex Orange County
+								</span>
+							</div>
+						</div>
+						<div class="scrub-row">
+							<span class="time mono">0:41</span>
+							<div class="bar"><span class="fill"></span><span class="thumb"></span></div>
+							<span class="time mono">−2:15</span>
+						</div>
+						<div class="transport">
+							<button class="ib on">
+								<svg class="ic" viewBox="0 0 24 24">
+									<path d="M16 3h5v5"></path>
+									<path d="M4 20 21 3"></path>
+									<path d="M21 16v5h-5"></path>
+									<path d="m15 15 6 6"></path>
+									<path d="m4 4 5 5"></path>
+								</svg>
+							</button>
+							<button class="ib">
+								<svg class="ic" viewBox="0 0 24 24">
+									<path d="M18.6 5.6v12.8L9.4 12Z" fill="currentColor" stroke-linejoin="round"></path>
+									<path d="M5.6 5v14"></path>
+								</svg>
+							</button>
+							<button class="ib play">
+								<svg class="ic" style="width: 22px; height: 22px" viewBox="0 0 24 24">
+									<path d="M8 5.4 19 12 8 18.6Z" fill="currentColor" stroke-linejoin="round"></path>
+								</svg>
+							</button>
+							<button class="ib">
+								<svg class="ic" viewBox="0 0 24 24">
+									<path d="M5.4 5.6v12.8L14.6 12Z" fill="currentColor" stroke-linejoin="round"></path>
+									<path d="M18.4 5v14"></path>
+								</svg>
+							</button>
+							<button class="ib">
+								<svg class="ic" viewBox="0 0 24 24">
+									<path d="m17 2 4 4-4 4"></path>
+									<path d="M3 11v-1a4 4 0 0 1 4-4h14"></path>
+									<path d="m7 22-4-4 4-4"></path>
+									<path d="M21 13v1a4 4 0 0 1-4 4H3"></path>
+								</svg>
+							</button>
+						</div>
+						<div class="utils">
+							<button class="ib tiny">
+								<svg class="ic" style="width: 15px; height: 15px" viewBox="0 0 24 24">
+									<path d="M11 5 6 9H2v6h4l5 4z" stroke-linejoin="round"></path>
+									<path d="M15.5 8.5a5 5 0 0 1 0 7"></path>
+								</svg>
+							</button>
+							<div class="volbar"><span class="fill"></span></div>
+							<button class="ib tiny">
+								<svg class="ic" style="width: 15px; height: 15px" viewBox="0 0 24 24">
+									<path d="M8 3H5a2 2 0 0 0-2 2v3"></path>
+									<path d="M16 3h3a2 2 0 0 1 2 2v3"></path>
+									<path d="M21 16v3a2 2 0 0 1-2 2h-3"></path>
+									<path d="M3 16v3a2 2 0 0 0 2 2h3"></path>
+								</svg>
+							</button>
+							<button class="ib tiny">
+								<svg class="ic" style="width: 15px; height: 15px" viewBox="0 0 24 24">
+									<path d="M12 5v14"></path>
+									<path d="M5 12h14"></path>
+								</svg>
+							</button>
+						</div>
+					</section>
+
+					<section class="card" style="overflow: hidden">
+						<header class="qhead">
+							<h2>queue</h2>
+							<span class="qmeta mono">32 · 2h 04m</span>
+							<span class="grow"></span>
+							<button class="ib tiny on" title="autoplay radio">
+								<svg class="ic" style="width: 15px; height: 15px" viewBox="0 0 24 24">
+									<path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"></path>
+									<path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"></path>
+									<path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"></path>
+									<path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"></path>
+									<circle cx="12" cy="12" r="2"></circle>
+								</svg>
+							</button>
+							<button class="ib tiny">
+								<svg class="ic" style="width: 15px; height: 15px" viewBox="0 0 24 24">
+									<circle cx="5" cy="12" r="1.6" fill="currentColor"></circle>
+									<circle cx="12" cy="12" r="1.6" fill="currentColor"></circle>
+									<circle cx="19" cy="12" r="1.6" fill="currentColor"></circle>
+								</svg>
+							</button>
+						</header>
+						<div class="qbody">
+							<div class="qrow now">
+								<span class="num">
+									<span class="eq" style="color: var(--accent)"><i></i><i></i><i></i><i></i></span>
+								</span>
+								<div class="cover dark"></div>
+								<span class="meta"><strong class="truncate">Low Fade</strong><em class="truncate">Karan Aujla, Mxrci</em></span>
+								<span class="dur">2:56</span>
+								<span class="grip">
+									<svg class="ic" style="width: 14px; height: 14px" viewBox="0 0 24 24">
+										<circle cx="9" cy="6" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="6" r="1.5" fill="currentColor"></circle>
+										<circle cx="9" cy="12" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="12" r="1.5" fill="currentColor"></circle>
+										<circle cx="9" cy="18" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="18" r="1.5" fill="currentColor"></circle>
+									</svg>
+								</span>
+							</div>
+							<div class="qrow">
+								<span class="num">2</span>
+								<div class="cover c3"></div>
+								<span class="meta"><strong class="truncate">Sunflower</strong><em class="truncate">Rex Orange County</em></span>
+								<span class="dur">4:11</span>
+								<span class="grip">
+									<svg class="ic" style="width: 14px; height: 14px" viewBox="0 0 24 24">
+										<circle cx="9" cy="6" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="6" r="1.5" fill="currentColor"></circle>
+										<circle cx="9" cy="12" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="12" r="1.5" fill="currentColor"></circle>
+										<circle cx="9" cy="18" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="18" r="1.5" fill="currentColor"></circle>
+									</svg>
+								</span>
+							</div>
+							<div class="qrow">
+								<span class="num">3</span>
+								<div class="cover c5"></div>
+								<span class="meta"><strong class="truncate">Space Song</strong><em class="truncate">Beach House</em></span>
+								<span class="dur">5:20</span>
+								<span class="grip">
+									<svg class="ic" style="width: 14px; height: 14px" viewBox="0 0 24 24">
+										<circle cx="9" cy="6" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="6" r="1.5" fill="currentColor"></circle>
+										<circle cx="9" cy="12" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="12" r="1.5" fill="currentColor"></circle>
+										<circle cx="9" cy="18" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="18" r="1.5" fill="currentColor"></circle>
+									</svg>
+								</span>
+							</div>
+							<div class="qrow">
+								<span class="num">4</span>
+								<div class="cover c7"></div>
+								<span class="meta"><strong class="truncate">Borderline</strong><em class="truncate">Tame Impala</em></span>
+								<span class="dur">3:57</span>
+								<span class="grip">
+									<svg class="ic" style="width: 14px; height: 14px" viewBox="0 0 24 24">
+										<circle cx="9" cy="6" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="6" r="1.5" fill="currentColor"></circle>
+										<circle cx="9" cy="12" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="12" r="1.5" fill="currentColor"></circle>
+										<circle cx="9" cy="18" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="18" r="1.5" fill="currentColor"></circle>
+									</svg>
+								</span>
+							</div>
+							<div class="qrow">
+								<span class="num">5</span>
+								<div class="cover c2"></div>
+								<span class="meta"><strong class="truncate">Redbone</strong><em class="truncate">Childish Gambino</em></span>
+								<span class="dur">5:26</span>
+								<span class="grip">
+									<svg class="ic" style="width: 14px; height: 14px" viewBox="0 0 24 24">
+										<circle cx="9" cy="6" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="6" r="1.5" fill="currentColor"></circle>
+										<circle cx="9" cy="12" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="12" r="1.5" fill="currentColor"></circle>
+										<circle cx="9" cy="18" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="18" r="1.5" fill="currentColor"></circle>
+									</svg>
+								</span>
+							</div>
+							<div class="qmore label">+ 27 more — scrolls</div>
+						</div>
+					</section>
+				</div>
+				<p class="note" style="max-width: 356px">
+					Art shrinks to 104, meta moves beside it, badge row dies; counter, shuffle state and
+					“next…” live in the meta. One scrubber with inline times, one transport row, one slim
+					utility row. Queue is no longer an accordion — up next is always visible.
+				</p>
+			</div>
+
+			<!-- ================= VARIANT B ================= -->
+			<div class="col">
+				<span class="col-label">B · cover-forward poster</span>
+				<div class="railwrap">
+					<section class="card deck-b">
+						<div class="poster">
+							<div class="art">
+								<div class="disc"></div>
+								<div class="cover dark"></div>
+								<div class="overlay">
+									<span class="label">now playing · 6 / 32</span>
+									<h3 class="truncate">Low Fade</h3>
+									<p class="truncate">Karan Aujla, Mxrci</p>
+								</div>
+							</div>
+						</div>
+						<div class="scrub-row">
+							<span class="time mono">0:41</span>
+							<div class="bar"><span class="fill"></span><span class="thumb"></span></div>
+							<span class="time mono">−2:15</span>
+						</div>
+						<div class="transport">
+							<button class="ib on">
+								<svg class="ic" viewBox="0 0 24 24">
+									<path d="M16 3h5v5"></path>
+									<path d="M4 20 21 3"></path>
+									<path d="M21 16v5h-5"></path>
+									<path d="m15 15 6 6"></path>
+									<path d="m4 4 5 5"></path>
+								</svg>
+							</button>
+							<button class="ib">
+								<svg class="ic" viewBox="0 0 24 24">
+									<path d="M18.6 5.6v12.8L9.4 12Z" fill="currentColor" stroke-linejoin="round"></path>
+									<path d="M5.6 5v14"></path>
+								</svg>
+							</button>
+							<button class="ib play">
+								<svg class="ic" style="width: 22px; height: 22px" viewBox="0 0 24 24">
+									<path d="M8 5.4 19 12 8 18.6Z" fill="currentColor" stroke-linejoin="round"></path>
+								</svg>
+							</button>
+							<button class="ib">
+								<svg class="ic" viewBox="0 0 24 24">
+									<path d="M5.4 5.6v12.8L14.6 12Z" fill="currentColor" stroke-linejoin="round"></path>
+									<path d="M18.4 5v14"></path>
+								</svg>
+							</button>
+							<button class="ib">
+								<svg class="ic" viewBox="0 0 24 24">
+									<path d="m17 2 4 4-4 4"></path>
+									<path d="M3 11v-1a4 4 0 0 1 4-4h14"></path>
+									<path d="m7 22-4-4 4-4"></path>
+									<path d="M21 13v1a4 4 0 0 1-4 4H3"></path>
+								</svg>
+							</button>
+						</div>
+						<div class="utils">
+							<button class="ib tiny">
+								<svg class="ic" style="width: 15px; height: 15px" viewBox="0 0 24 24">
+									<path d="M11 5 6 9H2v6h4l5 4z" stroke-linejoin="round"></path>
+									<path d="M15.5 8.5a5 5 0 0 1 0 7"></path>
+								</svg>
+							</button>
+							<div class="volbar"><span class="fill"></span></div>
+							<button class="ib tiny">
+								<svg class="ic" style="width: 15px; height: 15px" viewBox="0 0 24 24">
+									<path d="M8 3H5a2 2 0 0 0-2 2v3"></path>
+									<path d="M16 3h3a2 2 0 0 1 2 2v3"></path>
+									<path d="M21 16v3a2 2 0 0 1-2 2h-3"></path>
+									<path d="M3 16v3a2 2 0 0 0 2 2h3"></path>
+								</svg>
+							</button>
+							<button class="ib tiny">
+								<svg class="ic" style="width: 15px; height: 15px" viewBox="0 0 24 24">
+									<path d="M12 5v14"></path>
+									<path d="M5 12h14"></path>
+								</svg>
+							</button>
+						</div>
+					</section>
+
+					<section class="card" style="overflow: hidden">
+						<header class="qhead">
+							<svg class="ic" style="width: 17px; height: 17px" viewBox="0 0 24 24">
+								<path d="m6 9 6 6 6-6"></path>
+							</svg>
+							<h2>queue</h2>
+							<span class="qmeta mono">32 · 2h 04m</span>
+							<span class="grow"></span>
+							<button class="ib tiny on">
+								<svg class="ic" style="width: 15px; height: 15px" viewBox="0 0 24 24">
+									<path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"></path>
+									<path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"></path>
+									<path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"></path>
+									<path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"></path>
+									<circle cx="12" cy="12" r="2"></circle>
+								</svg>
+							</button>
+						</header>
+						<div class="qbody">
+							<div class="qrow now">
+								<span class="num">
+									<span class="eq" style="color: var(--accent)"><i></i><i></i><i></i><i></i></span>
+								</span>
+								<div class="cover dark"></div>
+								<span class="meta"><strong class="truncate">Low Fade</strong><em class="truncate">Karan Aujla, Mxrci</em></span>
+								<span class="dur">2:56</span>
+							</div>
+							<div class="qrow">
+								<span class="num">2</span>
+								<div class="cover c3"></div>
+								<span class="meta"><strong class="truncate">Sunflower</strong><em class="truncate">Rex Orange County</em></span>
+								<span class="dur">4:11</span>
+							</div>
+							<button class="qshow">show all 31 up next</button>
+						</div>
+					</section>
+				</div>
+				<p class="note" style="max-width: 356px">
+					The poster: art over text via a gradient, controls underneath, and the record peeking
+					out of the sleeve again. Queue closed = a taste of up next; the rail never looks empty.
+				</p>
+			</div>
+
+			<!-- ================= VARIANT B2 ================= -->
+			<div class="col">
+				<span class="col-label">B2 · queue open — poster makes way</span>
+				<div class="railwrap tall" style="grid-template-rows: auto minmax(0, 1fr); align-content: stretch">
+					<section class="card mini-deck">
+						<div class="art">
+							<div class="disc"></div>
+							<div class="cover dark"></div>
+						</div>
+						<span class="meta">
+							<strong class="truncate">Low Fade</strong>
+							<em class="truncate">Karan Aujla, Mxrci</em>
+						</span>
+						<span class="eq" style="color: var(--accent)"><i></i><i></i><i></i><i></i></span>
+						<button class="ib tiny">
+							<svg class="ic" style="width: 15px; height: 15px" viewBox="0 0 24 24">
+								<path d="m6 15 6-6 6 6"></path>
+							</svg>
+						</button>
+						<button class="ib tiny">
+							<svg class="ic" style="width: 15px; height: 15px" viewBox="0 0 24 24">
+								<path d="M8 5.4 19 12 8 18.6Z" fill="currentColor" stroke-linejoin="round"></path>
+							</svg>
+						</button>
+					</section>
+
+					<section
+						class="card"
+						style="overflow: hidden; min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr)"
+					>
+						<header class="qhead">
+							<h2>queue</h2>
+							<span class="qmeta mono">32 · 2h 04m</span>
+							<span class="grow"></span>
+							<button class="ib tiny on">
+								<svg class="ic" style="width: 15px; height: 15px" viewBox="0 0 24 24">
+									<path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"></path>
+									<path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"></path>
+									<path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"></path>
+									<path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"></path>
+									<circle cx="12" cy="12" r="2"></circle>
+								</svg>
+							</button>
+							<button class="ib tiny">
+								<svg class="ic" style="width: 15px; height: 15px" viewBox="0 0 24 24">
+									<circle cx="5" cy="12" r="1.6" fill="currentColor"></circle>
+									<circle cx="12" cy="12" r="1.6" fill="currentColor"></circle>
+									<circle cx="19" cy="12" r="1.6" fill="currentColor"></circle>
+								</svg>
+							</button>
+						</header>
+						<div class="qbody" style="overflow: hidden">
+							<div class="qrow now">
+								<span class="num">
+									<span class="eq" style="color: var(--accent)"><i></i><i></i><i></i><i></i></span>
+								</span>
+								<div class="cover dark"></div>
+								<span class="meta"><strong class="truncate">Low Fade</strong><em class="truncate">Karan Aujla, Mxrci</em></span>
+								<span class="dur">2:56</span>
+								<span class="grip">
+									<svg class="ic" style="width: 14px; height: 14px" viewBox="0 0 24 24">
+										<circle cx="9" cy="6" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="6" r="1.5" fill="currentColor"></circle>
+										<circle cx="9" cy="12" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="12" r="1.5" fill="currentColor"></circle>
+										<circle cx="9" cy="18" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="18" r="1.5" fill="currentColor"></circle>
+									</svg>
+								</span>
+							</div>
+							<div class="qrow">
+								<span class="num">2</span>
+								<div class="cover c3"></div>
+								<span class="meta"><strong class="truncate">Sunflower</strong><em class="truncate">Rex Orange County</em></span>
+								<span class="dur">4:11</span>
+								<span class="grip">
+									<svg class="ic" style="width: 14px; height: 14px" viewBox="0 0 24 24">
+										<circle cx="9" cy="6" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="6" r="1.5" fill="currentColor"></circle>
+										<circle cx="9" cy="12" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="12" r="1.5" fill="currentColor"></circle>
+										<circle cx="9" cy="18" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="18" r="1.5" fill="currentColor"></circle>
+									</svg>
+								</span>
+							</div>
+							<div class="qrow">
+								<span class="num">3</span>
+								<div class="cover c5"></div>
+								<span class="meta"><strong class="truncate">Space Song</strong><em class="truncate">Beach House</em></span>
+								<span class="dur">5:20</span>
+								<span class="grip">
+									<svg class="ic" style="width: 14px; height: 14px" viewBox="0 0 24 24">
+										<circle cx="9" cy="6" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="6" r="1.5" fill="currentColor"></circle>
+										<circle cx="9" cy="12" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="12" r="1.5" fill="currentColor"></circle>
+										<circle cx="9" cy="18" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="18" r="1.5" fill="currentColor"></circle>
+									</svg>
+								</span>
+							</div>
+							<div class="qrow">
+								<span class="num">4</span>
+								<div class="cover c7"></div>
+								<span class="meta"><strong class="truncate">Borderline</strong><em class="truncate">Tame Impala</em></span>
+								<span class="dur">3:57</span>
+								<span class="grip">
+									<svg class="ic" style="width: 14px; height: 14px" viewBox="0 0 24 24">
+										<circle cx="9" cy="6" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="6" r="1.5" fill="currentColor"></circle>
+										<circle cx="9" cy="12" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="12" r="1.5" fill="currentColor"></circle>
+										<circle cx="9" cy="18" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="18" r="1.5" fill="currentColor"></circle>
+									</svg>
+								</span>
+							</div>
+							<div class="qrow">
+								<span class="num">5</span>
+								<div class="cover c2"></div>
+								<span class="meta"><strong class="truncate">Redbone</strong><em class="truncate">Childish Gambino</em></span>
+								<span class="dur">5:26</span>
+								<span class="grip">
+									<svg class="ic" style="width: 14px; height: 14px" viewBox="0 0 24 24">
+										<circle cx="9" cy="6" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="6" r="1.5" fill="currentColor"></circle>
+										<circle cx="9" cy="12" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="12" r="1.5" fill="currentColor"></circle>
+										<circle cx="9" cy="18" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="18" r="1.5" fill="currentColor"></circle>
+									</svg>
+								</span>
+							</div>
+							<div class="qrow">
+								<span class="num">6</span>
+								<div class="cover c8"></div>
+								<span class="meta"><strong class="truncate">Chamber of Reflection</strong><em class="truncate">Mac DeMarco</em></span>
+								<span class="dur">3:01</span>
+								<span class="grip">
+									<svg class="ic" style="width: 14px; height: 14px" viewBox="0 0 24 24">
+										<circle cx="9" cy="6" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="6" r="1.5" fill="currentColor"></circle>
+										<circle cx="9" cy="12" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="12" r="1.5" fill="currentColor"></circle>
+										<circle cx="9" cy="18" r="1.5" fill="currentColor"></circle>
+										<circle cx="15" cy="18" r="1.5" fill="currentColor"></circle>
+									</svg>
+								</span>
+							</div>
+							<div class="qmore label">+ 26 more — scrolls</div>
+						</div>
+					</section>
+				</div>
+				<p class="note" style="max-width: 356px">
+					Queue open: the poster folds to a bar (art, title, eq, expand, play) and the queue takes
+					the rail. Nothing gets squeezed, nothing moves twice — the same accordion you have, just
+					with a graceful collapsed state.
+				</p>
+			</div>
+
+			<!-- ================= VARIANT C ================= -->
+			<div class="col">
+				<span class="col-label">C · docked player bar + queue drawer</span>
+				<div class="page-strip">
+					<div class="fake-page">
+						<div class="cover c7"></div>
+						<div class="cover c2"></div>
+						<div class="cover c3"></div>
+						<div class="cover c5"></div>
+					</div>
+					<div class="playerbar">
+						<div class="pb-progress"><span></span></div>
+						<div class="pb-art">
+							<div class="disc"></div>
+							<div class="cover dark"></div>
+						</div>
+						<div class="pb-meta">
+							<strong class="truncate">Low Fade</strong>
+							<em class="truncate">Karan Aujla, Mxrci · next Sunflower</em>
+						</div>
+						<div class="transport">
+							<button class="ib">
+								<svg class="ic" viewBox="0 0 24 24">
+									<path d="m17 2 4 4-4 4"></path>
+									<path d="M3 11v-1a4 4 0 0 1 4-4h14"></path>
+									<path d="m7 22-4-4 4-4"></path>
+									<path d="M21 13v1a4 4 0 0 1-4 4H3"></path>
+								</svg>
+							</button>
+							<button class="ib">
+								<svg class="ic" viewBox="0 0 24 24">
+									<path d="M18.6 5.6v12.8L9.4 12Z" fill="currentColor" stroke-linejoin="round"></path>
+									<path d="M5.6 5v14"></path>
+								</svg>
+							</button>
+							<button class="ib play">
+								<svg class="ic" style="width: 22px; height: 22px" viewBox="0 0 24 24">
+									<path d="M8 5.4 19 12 8 18.6Z" fill="currentColor" stroke-linejoin="round"></path>
+								</svg>
+							</button>
+							<button class="ib">
+								<svg class="ic" viewBox="0 0 24 24">
+									<path d="M5.4 5.6v12.8L14.6 12Z" fill="currentColor" stroke-linejoin="round"></path>
+									<path d="M18.4 5v14"></path>
+								</svg>
+							</button>
+							<button class="ib on">
+								<svg class="ic" viewBox="0 0 24 24">
+									<path d="M16 3h5v5"></path>
+									<path d="M4 20 21 3"></path>
+									<path d="M21 16v5h-5"></path>
+									<path d="m15 15 6 6"></path>
+									<path d="m4 4 5 5"></path>
+								</svg>
+							</button>
+						</div>
+						<div class="pb-right">
+							<span class="pb-time mono">0:41 / 2:56</span>
+							<button class="ib tiny">
+								<svg class="ic" style="width: 15px; height: 15px" viewBox="0 0 24 24">
+									<path d="M11 5 6 9H2v6h4l5 4z" stroke-linejoin="round"></path>
+									<path d="M15.5 8.5a5 5 0 0 1 0 7"></path>
+								</svg>
+							</button>
+							<button class="ib tiny">
+								<svg class="ic" style="width: 15px; height: 15px" viewBox="0 0 24 24">
+									<path d="M8 3H5a2 2 0 0 0-2 2v3"></path>
+									<path d="M16 3h3a2 2 0 0 1 2 2v3"></path>
+									<path d="M21 16v3a2 2 0 0 1-2 2h-3"></path>
+									<path d="M3 16v3a2 2 0 0 0 2 2h3"></path>
+								</svg>
+							</button>
+							<button class="ib tiny on" style="width: auto; padding: 0 10px; gap: 6px; display: inline-flex; align-items: center">
+								<svg class="ic" style="width: 15px; height: 15px" viewBox="0 0 24 24">
+									<path d="M8 6h13"></path>
+									<path d="M8 12h13"></path>
+									<path d="M8 18h13"></path>
+								</svg>
+								<span style="font-size: 12px; font-weight: 700">32</span>
+							</button>
+						</div>
+					</div>
+				</div>
+
+				<div class="drawerwrap">
+					<span class="col-label">queue drawer over the page</span>
+					<div class="ghost-rows">
+						<div class="ghost"></div>
+						<div class="ghost"></div>
+						<div class="ghost"></div>
+						<div class="ghost"></div>
+						<div class="ghost"></div>
+					</div>
+					<section class="card queue-drawer">
+						<header class="qhead">
+							<h2>queue</h2>
+							<span class="qmeta mono">32 · 2h 04m</span>
+							<span class="grow"></span>
+							<button class="ib tiny on">
+								<svg class="ic" style="width: 15px; height: 15px" viewBox="0 0 24 24">
+									<path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"></path>
+									<path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"></path>
+									<path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"></path>
+									<path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"></path>
+									<circle cx="12" cy="12" r="2"></circle>
+								</svg>
+							</button>
+							<button class="ib tiny">
+								<svg class="ic" style="width: 15px; height: 15px" viewBox="0 0 24 24">
+									<path d="M6 6 18 18"></path>
+									<path d="M18 6 6 18"></path>
+								</svg>
+							</button>
+						</header>
+						<div class="qbody" style="overflow: hidden">
+							<div class="qrow now">
+								<span class="num">
+									<span class="eq" style="color: var(--accent)"><i></i><i></i><i></i><i></i></span>
+								</span>
+								<div class="cover dark"></div>
+								<span class="meta"><strong class="truncate">Low Fade</strong><em class="truncate">Karan Aujla, Mxrci</em></span>
+								<span class="dur">2:56</span>
+							</div>
+							<div class="qrow">
+								<span class="num">2</span>
+								<div class="cover c3"></div>
+								<span class="meta"><strong class="truncate">Sunflower</strong><em class="truncate">Rex Orange County</em></span>
+								<span class="dur">4:11</span>
+							</div>
+							<div class="qrow">
+								<span class="num">3</span>
+								<div class="cover c5"></div>
+								<span class="meta"><strong class="truncate">Space Song</strong><em class="truncate">Beach House</em></span>
+								<span class="dur">5:20</span>
+							</div>
+							<div class="qrow">
+								<span class="num">4</span>
+								<div class="cover c7"></div>
+								<span class="meta"><strong class="truncate">Borderline</strong><em class="truncate">Tame Impala</em></span>
+								<span class="dur">3:57</span>
+							</div>
+						</div>
+					</section>
+				</div>
+				<p class="note" style="max-width: 940px">
+					The structural option: the whole right rail goes away, pages get the full width, and
+					the player becomes a docked bar (thin progress line across the top, times at the
+					right). Queue slides over the page. Most room for mixes, most conventional.
+				</p>
+			</div>
+
+			<!-- ================= EMPTIES ================= -->
+			<div class="col">
+				<span class="col-label">D · quiet states</span>
+				<div class="railwrap">
+					<section class="card empty-deck">
+						<div class="doodle">
+							<div class="disc"></div>
+							<div class="cover">
+								<svg class="ic" style="width: 24px; height: 24px" viewBox="0 0 24 24">
+									<circle cx="12" cy="12" r="9"></circle>
+									<circle cx="12" cy="12" r="2.6"></circle>
+								</svg>
+							</div>
+						</div>
+						<h3>nothing on the deck</h3>
+						<p>Pick something from home, or let lucky gamble.</p>
+						<button
+							class="ib"
+							style="width: auto; padding: 0 14px; gap: 7px; display: inline-flex; align-items: center; background: var(--pop)"
+						>
+							<svg class="ic" style="width: 15px; height: 15px" viewBox="0 0 24 24">
+								<path d="m12 3 1.7 5.1a2 2 0 0 0 1.2 1.2L20 11l-5.1 1.7a2 2 0 0 0-1.2 1.2L12 19l-1.7-5.1a2 2 0 0 0-1.2-1.2L4 11l5.1-1.7a2 2 0 0 0 1.2-1.2Z" stroke-linejoin="round"></path>
+							</svg>
+							<span style="font-weight: 700; font-size: 13px">lucky</span>
+						</button>
+					</section>
+
+					<section class="card empty-queue">
+						<span class="icon">
+							<svg class="ic" viewBox="0 0 24 24">
+								<path d="M8 6h13"></path>
+								<path d="M8 12h13"></path>
+								<path d="M8 18h13"></path>
+								<circle cx="3.6" cy="6" r="1.2" fill="currentColor"></circle>
+								<circle cx="3.6" cy="12" r="1.2" fill="currentColor"></circle>
+							</svg>
+						</span>
+						<strong>queue is empty</strong>
+						<p>Hit + on any track, or let radio keep the music going when this runs out.</p>
+					</section>
+				</div>
+				<p class="note" style="max-width: 356px">
+					The old 500px “press play on something delicious” hero belongs on home when the library
+					is empty — in the rail it should be this: small, useful, one action.
+				</p>
+			</div>
+		</main>
+	</body>
+</html>
