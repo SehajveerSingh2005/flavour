@@ -13,17 +13,20 @@ function isTrack(value: unknown): value is Track {
 /** Recently played tracks — the seed of the library. */
 function createHistory() {
 	let items = $state<Track[]>([]);
+	let hydrated = $state(false);
 
 	function hydrate() {
 		if (!browser) return;
 		try {
 			const raw = localStorage.getItem(KEY);
-			if (!raw) return;
-			const parsed: unknown = JSON.parse(raw);
-			if (Array.isArray(parsed)) items = parsed.filter(isTrack).slice(0, LIMIT);
+			if (raw) {
+				const parsed: unknown = JSON.parse(raw);
+				if (Array.isArray(parsed)) items = parsed.filter(isTrack).slice(0, LIMIT);
+			}
 		} catch {
 			/* corrupted storage — start fresh */
 		}
+		hydrated = true;
 	}
 
 	function record(track: Track) {
@@ -51,6 +54,9 @@ function createHistory() {
 	return {
 		get items() {
 			return items;
+		},
+		get hydrated() {
+			return hydrated;
 		},
 		record,
 		hydrate,

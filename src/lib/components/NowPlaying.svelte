@@ -241,14 +241,14 @@
 
 	/* ---------- the poster ---------- */
 	.poster {
-		width: calc(100% - 28px);
-		margin: 0 auto;
+		position: relative;
+		width: 100%;
 	}
 	.disc {
 		position: absolute;
-		top: 54%;
-		left: 68%;
-		width: 40%;
+		bottom: 1.5%;
+		right: 1.5%;
+		width: 78%;
 		aspect-ratio: 1;
 		z-index: 0;
 		border: 3px solid var(--ink);
@@ -274,13 +274,13 @@
 			var(--shadow-sm);
 		animation: disc-spin 8s linear infinite;
 		animation-play-state: paused;
-		transition: left 0.45s var(--ease-pop);
+		transition: right 0.45s var(--ease-pop);
 	}
 	.disc.spinning {
 		animation-play-state: running;
 	}
 	.poster:hover .disc {
-		left: 69%;
+		right: 0%;
 	}
 	@keyframes disc-spin {
 		from {
@@ -294,7 +294,8 @@
 		position: relative;
 		z-index: 1;
 		display: block;
-		width: 100%;
+		/* the sleeve leaves a gutter on the right for the record */
+		width: calc(100% - 12%);
 		aspect-ratio: 1;
 		padding: 0;
 		border: var(--bw) solid var(--ink);
@@ -518,19 +519,33 @@
 	}
 	.quiet-art {
 		position: relative;
-		width: 72px;
+		width: 76px;
 		aspect-ratio: 1;
-		margin: 2px 12px 8px 0;
+		margin: 2px 14px 10px 0;
 	}
 	.quiet-disc {
 		position: absolute;
-		top: 52%;
-		left: 58%;
-		width: 62%;
+		right: -22%;
+		bottom: 2%;
+		width: 84%;
 		aspect-ratio: 1;
 		border: 3px solid var(--ink);
 		border-radius: 50%;
-		background: radial-gradient(circle at 50% 50%, #4d4d5c 0 16%, #1c1c26 17% 97%, #31313f 98%);
+		background:
+			conic-gradient(
+				from 210deg at 50% 50%,
+				rgb(255 255 255 / 0.16),
+				transparent 22%,
+				transparent 58%,
+				rgb(255 255 255 / 0.09) 78%,
+				transparent 92%
+			),
+			repeating-radial-gradient(
+				circle at 50% 50%,
+				rgb(255 255 255 / 0.075) 0 1px,
+				transparent 1px 4px
+			),
+			radial-gradient(circle at 50% 50%, #4d4d5c 0 16%, #1c1c26 17% 97%, #31313f 98%);
 	}
 	.quiet-cover {
 		position: relative;

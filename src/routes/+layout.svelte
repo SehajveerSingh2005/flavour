@@ -292,7 +292,8 @@
 			min-height: 0;
 			overflow-y: auto;
 			overscroll-behavior: contain;
-			padding: 2px 4px 6px 2px;
+			/* room for the cards' hard shadows before the scroll clip */
+			padding: 2px 10px 10px 2px;
 		}
 		.rail {
 			display: grid;
@@ -303,6 +304,7 @@
 			min-height: 0;
 			/* a short window scrolls the rail instead of clipping the deck */
 			overflow-y: auto;
+			padding: 2px 10px 10px 2px;
 			scrollbar-width: thin;
 		}
 		.rail.queue-open {

@@ -2,6 +2,8 @@
 	import { goto } from '$app/navigation';
 	import Icon from '$lib/components/Icon.svelte';
 	import MixTile from '$lib/components/MixTile.svelte';
+	import Recommended from '$lib/components/Recommended.svelte';
+	import Tile from '$lib/components/Tile.svelte';
 	import { history } from '$lib/history.svelte';
 	import { mixes } from '$lib/mixes.svelte';
 	import { player } from '$lib/player.svelte';
@@ -76,31 +78,22 @@
 					<Icon name="x" size={12} /> clear
 				</button>
 			</header>
-			<ul class="strip">
+			<ul class="covers">
 				{#each history.items as track (track.id)}
 					<li>
-						<button
-							class="slide"
+						<Tile
+							art={track.art}
+							title={track.title}
+							subtitle={track.artist}
 							onclick={() => player.playNow(track, history.items)}
-							title="Play “{track.title}”"
-						>
-							<span class="slide-art squircle">
-								{#if track.art}
-									<img src={track.art} alt="" loading="lazy" referrerpolicy="no-referrer" />
-								{:else}
-									<Icon name="music" size={16} />
-								{/if}
-							</span>
-							<span class="slide-meta">
-								<strong class="truncate">{track.title}</strong>
-								<em class="truncate">{track.artist}</em>
-							</span>
-						</button>
+						/>
 					</li>
 				{/each}
 			</ul>
 		</section>
 	{/if}
+
+	<Recommended />
 
 	<section class="shelf" aria-label="Your mixes">
 		<header class="shelf-head">
@@ -164,19 +157,34 @@
 	}
 	.welcome-art {
 		position: relative;
-		width: 84px;
+		width: 88px;
 		aspect-ratio: 1;
-		margin: 4px 14px 10px 0;
+		margin: 4px 16px 10px 0;
 	}
 	.welcome-art .disc {
 		position: absolute;
-		top: 54%;
-		left: 58%;
-		width: 62%;
+		right: -22%;
+		bottom: 2%;
+		width: 84%;
 		aspect-ratio: 1;
 		border: 3px solid var(--ink);
 		border-radius: 50%;
-		background: radial-gradient(circle at 50% 50%, #4d4d5c 0 16%, #1c1c26 17% 97%, #31313f 98%);
+		background:
+			conic-gradient(
+				from 210deg at 50% 50%,
+				rgb(255 255 255 / 0.16),
+				transparent 22%,
+				transparent 58%,
+				rgb(255 255 255 / 0.09) 78%,
+				transparent 92%
+			),
+			repeating-radial-gradient(
+				circle at 50% 50%,
+				rgb(255 255 255 / 0.075) 0 1px,
+				transparent 1px 4px
+			),
+			radial-gradient(circle at 50% 50%, #4d4d5c 0 16%, #1c1c26 17% 97%, #31313f 98%);
+		animation: spin-slow 16s linear infinite;
 	}
 	.welcome-art .cover {
 		position: relative;
@@ -190,7 +198,7 @@
 		background: var(--surface);
 		color: var(--accent);
 		box-shadow: var(--shadow-sm);
-		animation: spin-slow 24s linear infinite;
+		transform: rotate(-1.5deg);
 	}
 	.welcome h1 {
 		font-size: clamp(1.4rem, 3vw, 1.9rem);
@@ -247,75 +255,17 @@
 		color: var(--ink);
 	}
 
-	/* jump back in */
-	.strip {
+	/* jump back in — proper covers, scrolled sideways */
+	.covers {
 		list-style: none;
 		margin: 0;
 		padding: 4px 4px 12px;
 		display: grid;
 		grid-auto-flow: column;
-		grid-auto-columns: max-content;
-		gap: 10px;
+		grid-auto-columns: clamp(132px, 15vw, 170px);
+		gap: clamp(12px, 1.4vw, 18px);
 		overflow-x: auto;
 		scrollbar-width: thin;
-	}
-	.slide {
-		--tilt: 0deg;
-		display: grid;
-		grid-template-columns: auto minmax(0, 1fr);
-		align-items: center;
-		gap: 9px;
-		width: 190px;
-		padding: 6px 10px 6px 6px;
-		background: var(--surface);
-		border: 2px solid var(--ink);
-		border-radius: 15px;
-		box-shadow: 2px 2px 0 var(--ink);
-		text-align: left;
-		cursor: pointer;
-		transform: rotate(var(--tilt));
-		transition:
-			transform var(--t),
-			box-shadow var(--t);
-	}
-	.strip li:nth-child(odd) .slide {
-		--tilt: -1deg;
-	}
-	.strip li:nth-child(even) .slide {
-		--tilt: 0.8deg;
-	}
-	.slide:hover {
-		transform: translate(-1px, -1px) rotate(0deg);
-		box-shadow: 4px 4px 0 var(--ink);
-	}
-	.slide-art {
-		display: grid;
-		place-items: center;
-		width: 40px;
-		height: 40px;
-		border: 2px solid var(--ink);
-		border-radius: 12px;
-		overflow: hidden;
-		background: var(--surface-2);
-		color: var(--muted);
-	}
-	.slide-art img {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-	}
-	.slide-meta {
-		display: grid;
-		min-width: 0;
-		line-height: 1.15;
-	}
-	.slide-meta strong {
-		font-size: 0.84rem;
-	}
-	.slide-meta em {
-		font-style: normal;
-		font-size: 0.74rem;
-		color: var(--muted);
 	}
 
 	/* mixes */
@@ -354,7 +304,8 @@
 		display: grid;
 		gap: 9px;
 		width: 100%;
-		aspect-ratio: 1;
+		height: 100%;
+		min-height: 150px;
 		align-content: center;
 		padding: 12px;
 		border: var(--bw) dashed var(--ink);
@@ -362,17 +313,21 @@
 		background: color-mix(in srgb, var(--surface) 70%, transparent);
 	}
 	.new-mix .input {
+		/* inputs have a big intrinsic minimum — let the field shrink into the tile */
+		min-width: 0;
 		padding: 0.6rem 0.85rem;
 		font-size: 0.9rem;
 	}
 	.new-mix-row {
 		display: flex;
+		flex-wrap: wrap;
 		gap: 8px;
 	}
 	.new-mix-row .btn {
-		flex: 1;
-		padding: 0.5rem 0.7rem;
-		font-size: 0.82rem;
+		flex: 1 1 auto;
+		min-width: 0;
+		padding: 0.5rem 0.6rem;
+		font-size: 0.8rem;
 	}
 	.new-mix-row .btn--ghost {
 		flex: 0 1 auto;
