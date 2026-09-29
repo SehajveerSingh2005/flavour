@@ -140,6 +140,7 @@ There's also a small import map: `src/lib/yt/loader.ts` wraps the IFrame API wit
 - Embed-restricted / region-blocked videos are **skipped automatically** with a toast
 - **Autoplay radio** comes from YouTube Music's up-next feed: it needs the current track to be in the music catalogue, otherwise it quietly gives up
 - **Mobile browsers** may pause background playback when the screen locks — that's a browser limitation, not the app
+- `youtubei.js` occasionally logs a parser warning (`TextBadge not found!`) while it JIT-generates the missing class; search and playback carry on — it's noise from the library, not the app
 - Album art sets `referrerpolicy="no-referrer"`: some YouTube CDN images reject unknown referrers
 - `static/robots.txt` disallows indexing — this is a personal toy, not a public service
 
