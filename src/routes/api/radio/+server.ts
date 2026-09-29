@@ -1,4 +1,5 @@
 import { error, json } from '@sveltejs/kit';
+import { memo } from '$lib/server/cache';
 import { fetchRadio } from '$lib/server/yt';
 import type { Track } from '$lib/types';
 import type { RequestHandler } from './$types';
@@ -12,12 +13,8 @@ export const GET: RequestHandler = async ({ url, setHeaders }) => {
 	const id = (url.searchParams.get('id') ?? '').trim();
 	if (!/^[\w-]{11}$/.test(id)) throw error(400, 'That is not a video id');
 
-	let tracks: Track[] = [];
-	try {
-		tracks = await fetchRadio(id);
-	} catch {
-		tracks = [];
-	}
+	// a failed fetch throws (and is retried); an empty "up next" is remembered
+	const tracks = await memo(`radio:${id}`, () => fetchRadio(id)).catch(() => [] as Track[]);
 	if (!tracks.length) throw error(404, 'No radio for this one');
 
 	setHeaders({

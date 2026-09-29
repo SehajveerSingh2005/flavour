@@ -1,4 +1,5 @@
 import { error, json } from '@sveltejs/kit';
+import { memo } from '$lib/server/cache';
 import {
 	fromMusicItem,
 	fromVideoItem,
@@ -19,11 +20,34 @@ import type { RequestHandler } from './$types';
  * the long tail the music catalogue misses.
  */
 
+interface SearchPayload {
+	tracks: Track[];
+	albums: Collection[];
+	playlists: Collection[];
+}
+
 export const GET: RequestHandler = async ({ url, setHeaders }) => {
 	const q = (url.searchParams.get('q') ?? '').trim();
 	if (q.length < 2) throw error(400, 'Type at least two characters');
 	if (q.length > 140) throw error(400, 'That query is too long');
 
+	// YouTube is case-insensitive — normalising the key makes the in-process
+	// memo (and the edge cache) hit for "The Weeknd" and "the weeknd" alike
+	const key = q.toLowerCase().replace(/\s+/g, ' ');
+	const result = await memo(`search:${key}`, () => search(q));
+
+	if (!result.tracks.length && !result.albums.length && !result.playlists.length) {
+		throw error(404, 'Nothing found for that');
+	}
+
+	setHeaders({
+		// popular searches get cached at the edge — faster and lighter on YouTube
+		'cache-control': 'public, s-maxage=3600, stale-while-revalidate=86400'
+	});
+	return json(result);
+};
+
+async function search(q: string): Promise<SearchPayload> {
 	const yt = await getInnertube();
 	const tracks: Track[] = [];
 	const albums: Collection[] = [];
@@ -78,13 +102,5 @@ export const GET: RequestHandler = async ({ url, setHeaders }) => {
 		}
 	}
 
-	if (!tracks.length && !albums.length && !playlists.length) {
-		throw error(404, 'Nothing found for that');
-	}
-
-	setHeaders({
-		// popular searches get cached at the edge — faster and lighter on YouTube
-		'cache-control': 'public, s-maxage=3600, stale-while-revalidate=86400'
-	});
-	return json({ tracks: tracks.slice(0, 24), albums, playlists });
-};
+	return { tracks: tracks.slice(0, 24), albums, playlists };
+}

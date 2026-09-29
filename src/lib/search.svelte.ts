@@ -16,6 +16,10 @@ function createSearch() {
 	let controller: AbortController | null = null;
 	let requestId = 0;
 
+	/** results already fetched this session, keyed by request url */
+	const CACHE_MAX = 40;
+	const cache = new Map<string, { tracks: Track[]; albums: Collection[]; playlists: Collection[] }>();
+
 	function hydrate() {
 		if (!browser) return;
 		try {
@@ -60,9 +64,22 @@ function createSearch() {
 		const localController = new AbortController();
 		controller = localController;
 		const id = ++requestId;
-		loading = true;
 		error = null;
 		query = label;
+
+		// going back to a query (or retyping one) shouldn't touch the network again
+		const cached = cache.get(url);
+		if (cached) {
+			results = cached.tracks;
+			albums = cached.albums;
+			playlists = cached.playlists;
+			lastQuery = label;
+			loading = false;
+			if (results.length && doRemember) remember(label);
+			return results;
+		}
+
+		loading = true;
 
 		try {
 			const res = await fetch(url, { signal: localController.signal });
@@ -75,10 +92,22 @@ function createSearch() {
 				albums?: Collection[];
 				playlists?: Collection[];
 			};
+			const payload = {
+				tracks: data.tracks ?? [],
+				albums: data.albums ?? [],
+				playlists: data.playlists ?? []
+			};
+			// remember even superseded responses — the data is still right
+			cache.delete(url);
+			cache.set(url, payload);
+			if (cache.size > CACHE_MAX) {
+				const oldest = cache.keys().next().value;
+				if (oldest !== undefined) cache.delete(oldest);
+			}
 			if (id !== requestId) return [];
-			results = data.tracks ?? [];
-			albums = data.albums ?? [];
-			playlists = data.playlists ?? [];
+			results = payload.tracks;
+			albums = payload.albums;
+			playlists = payload.playlists;
 			lastQuery = label;
 			if (results.length && doRemember) remember(label);
 			return results;

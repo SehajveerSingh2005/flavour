@@ -1,5 +1,6 @@
 import { error, json } from '@sveltejs/kit';
-import { parseYouTubeLink } from '$lib/youtube';
+import { memo } from '$lib/server/cache';
+import { parseYouTubeLink, type YouTubeLink } from '$lib/youtube';
 import { fetchPlaylist, fetchVideo } from '$lib/server/yt';
 import type { Track } from '$lib/types';
 import type { RequestHandler } from './$types';
@@ -14,29 +15,29 @@ export const GET: RequestHandler = async ({ url, setHeaders }) => {
 	const link = parseYouTubeLink(raw);
 	if (!link) throw error(400, 'Paste a YouTube video or playlist link');
 
-	const kind = link.kind;
-	let title = '';
-	let tracks: Track[] = [];
-
-	try {
-		if (link.kind === 'playlist') {
-			const playlist = await fetchPlaylist(link.id);
-			title = playlist.title;
-			tracks = playlist.tracks;
-		} else {
-			const track = await fetchVideo(link.id);
-			if (track) tracks = [track];
-		}
-	} catch {
-		tracks = [];
-	}
-
-	if (!tracks.length) {
-		throw error(404, kind === 'playlist' ? 'Could not load that playlist' : 'Could not load that video');
+	// a failed fetch throws (and is retried); an empty result is remembered
+	const result = await memo(`resolve:${link.kind}:${link.id}`, () => resolve(link)).catch(
+		() => null
+	);
+	if (!result?.tracks.length) {
+		throw error(
+			404,
+			link.kind === 'playlist' ? 'Could not load that playlist' : 'Could not load that video'
+		);
 	}
 
 	setHeaders({
 		'cache-control': 'public, s-maxage=3600, stale-while-revalidate=86400'
 	});
-	return json({ kind, title, tracks });
+	return json(result);
 };
+
+async function resolve(link: YouTubeLink): Promise<{ kind: string; title: string; tracks: Track[] }> {
+	if (link.kind === 'playlist') {
+		const playlist = await fetchPlaylist(link.id);
+		return { kind: link.kind, title: playlist.title, tracks: playlist.tracks };
+	}
+
+	const track = await fetchVideo(link.id);
+	return { kind: link.kind, title: '', tracks: track ? [track] : [] };
+}

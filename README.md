@@ -116,7 +116,7 @@ src/
 3. Framework preset is auto-detected as SvelteKit. No environment variables needed
 4. Deploy — every push to `main` redeploys automatically
 
-The `/api/search` route becomes a Vercel function, and search responses are cached at the edge for an hour (`s-maxage=3600`).
+The `/api/search` route becomes a Vercel function, and search responses are cached at the edge for an hour (`s-maxage=3600`). On top of that, warm function instances memoise each query for five minutes (and coalesce identical in-flight requests), so retyping or double-clicking a search never asks YouTube twice.
 
 ### Local builds on Windows
 
