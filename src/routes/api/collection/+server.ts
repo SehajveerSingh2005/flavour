@@ -17,6 +17,8 @@ export const GET: RequestHandler = async ({ url, setHeaders }) => {
 
 	let title = '';
 	let subtitle = '';
+	let artist = '';
+	let art = '';
 	let tracks: Track[] = [];
 
 	try {
@@ -24,11 +26,15 @@ export const GET: RequestHandler = async ({ url, setHeaders }) => {
 			const album = await fetchAlbum(id);
 			title = album.title;
 			subtitle = album.subtitle;
+			artist = album.artist;
+			art = album.art;
 			tracks = album.tracks;
 		} else {
 			const playlist = await fetchMusicPlaylist(id);
 			title = playlist.title;
 			subtitle = playlist.subtitle;
+			artist = playlist.artist;
+			art = playlist.art;
 			tracks = playlist.tracks;
 		}
 	} catch {
@@ -42,5 +48,5 @@ export const GET: RequestHandler = async ({ url, setHeaders }) => {
 	setHeaders({
 		'cache-control': 'public, s-maxage=3600, stale-while-revalidate=86400'
 	});
-	return json({ kind: type, title, subtitle, tracks });
+	return json({ kind: type, title, subtitle, artist, art: art || tracks[0]?.art || '', tracks });
 };

@@ -28,3 +28,17 @@ export interface Collection {
 	subtitle: string;
 	art: string;
 }
+
+/** A track, or a whole album/playlist, in the recently-played shelf. */
+export interface HistoryTrack {
+	type: 'track';
+	track: Track;
+}
+export interface HistoryCollection {
+	type: 'album' | 'playlist';
+	id: string;
+	title: string;
+	subtitle: string;
+	art: string;
+}
+export type HistoryItem = HistoryTrack | HistoryCollection;

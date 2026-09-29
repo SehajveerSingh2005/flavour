@@ -1,8 +1,7 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { history } from '$lib/history.svelte';
-	import { player } from '$lib/player.svelte';
-	import { toasts } from '$lib/toasts.svelte';
-	import type { Collection, Track } from '$lib/types';
+	import type { Collection, HistoryItem } from '$lib/types';
 	import Tile from './Tile.svelte';
 
 	/** one shelf per seed per session — no refetching when hopping around the app */
@@ -10,12 +9,18 @@
 
 	let items = $state<Collection[]>([]);
 	let ready = $state(false);
-	let opening = $state<string | null>(null);
 	let tried = '';
+
+	/** what to browse from: the artist played last, else the last album opened */
+	function seedFrom(list: HistoryItem[]): string {
+		for (const item of list) if (item.type === 'track') return item.track.artist;
+		for (const item of list) if (item.type !== 'track') return item.title;
+		return '';
+	}
 
 	$effect(() => {
 		if (!history.hydrated) return;
-		const seed = history.items[0]?.artist ?? '';
+		const seed = seedFrom(history.items);
 		if (!seed) {
 			// nothing played yet — no hardcoded suggestions, the shelf stays hidden
 			items = [];
@@ -50,27 +55,6 @@
 			if (tried === seed) ready = true;
 		}
 	}
-
-	async function open(item: Collection) {
-		if (opening) return;
-		opening = item.id;
-		try {
-			const res = await fetch(`/api/collection?type=${item.kind}&id=${encodeURIComponent(item.id)}`);
-			if (!res.ok) throw new Error('failed');
-			const data = (await res.json()) as { tracks?: Track[] };
-			const tracks = data.tracks ?? [];
-			if (!tracks.length) throw new Error('empty');
-			player.playNow(tracks[0], tracks);
-			toasts.push(
-				`${item.kind === 'album' ? 'Album' : 'Playlist'} · ${tracks.length} tracks queued`,
-				'accent'
-			);
-		} catch {
-			toasts.push(`Could not load that ${item.kind}`, 'error');
-		} finally {
-			opening = null;
-		}
-	}
 </script>
 
 {#if items.length || !ready}
@@ -88,9 +72,9 @@
 						title={item.title}
 						subtitle={item.subtitle}
 						kind={item.kind}
-						loading={opening === item.id}
-						disabled={opening !== null}
-						onclick={() => open(item)}
+						action="open"
+						label="Open “{item.title}”"
+						onclick={() => goto(`/collection/${item.kind}/${item.id}`)}
 					/>
 				</li>
 			{/each}

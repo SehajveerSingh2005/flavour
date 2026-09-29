@@ -10,9 +10,15 @@
 	import { player } from '$lib/player.svelte';
 	import { search } from '$lib/search.svelte';
 	import { toasts } from '$lib/toasts.svelte';
+	import type { HistoryTrack } from '$lib/types';
 
 	let creating = $state(false);
 	let name = $state('');
+
+	/** the queue a past track plays in: the tracks you played, in order */
+	const playedTracks = $derived(
+		history.items.filter((item): item is HistoryTrack => item.type === 'track').map((item) => item.track)
+	);
 
 	/** lucky: the typed query's top hit, or a gamble on your own listening */
 	async function lucky() {
@@ -69,14 +75,26 @@
 				</button>
 			</header>
 			<ul class="covers">
-				{#each history.items as track (track.id)}
+				{#each history.items as item, i (item.type === 'track' ? `t${i}:${item.track.id}` : `c${i}:${item.id}`)}
 					<li>
-						<Tile
-							art={track.art}
-							title={track.title}
-							subtitle={track.artist}
-							onclick={() => player.playNow(track, history.items)}
-						/>
+						{#if item.type === 'track'}
+							<Tile
+								art={item.track.art}
+								title={item.track.title}
+								subtitle={item.track.artist}
+								onclick={() => player.playNow(item.track, playedTracks)}
+							/>
+						{:else}
+							<Tile
+								art={item.art}
+								title={item.title}
+								subtitle={item.subtitle}
+								kind={item.type}
+								action="open"
+								label="Open “{item.title}”"
+								onclick={() => goto(`/collection/${item.type}/${item.id}`)}
+							/>
+						{/if}
 					</li>
 				{/each}
 			</ul>

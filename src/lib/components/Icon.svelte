@@ -32,6 +32,7 @@
 		grip: '<circle cx="9" cy="6" r="1.5" fill="currentColor"/><circle cx="15" cy="6" r="1.5" fill="currentColor"/><circle cx="9" cy="12" r="1.5" fill="currentColor"/><circle cx="15" cy="12" r="1.5" fill="currentColor"/><circle cx="9" cy="18" r="1.5" fill="currentColor"/><circle cx="15" cy="18" r="1.5" fill="currentColor"/>',
 		'chevron-down': '<path d="m6 9 6 6 6-6"/>',
 		'chevron-up': '<path d="m6 15 6-6 6 6"/>',
+		'chevron-right': '<path d="m9 6 6 6-6 6"/>',
 		maximize:
 			'<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M21 16v3a2 2 0 0 1-2 2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/>',
 		minimize:

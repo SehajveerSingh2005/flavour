@@ -276,13 +276,18 @@ interface HeaderLike {
 	title?: { text?: string };
 	subtitle?: { text?: string };
 	second_subtitle?: { text?: string };
+	/** album/playlist author line — “Tame Impala” */
+	strapline_text_one?: { text?: string };
+	thumbnail?: unknown;
 }
 
-function headerInfo(header: unknown): { title: string; subtitle: string } {
+function headerInfo(header: unknown): { title: string; subtitle: string; artist: string; art: string } {
 	const shaped = (header ?? {}) as HeaderLike;
 	return {
 		title: textOf(shaped.title) || 'Untitled',
-		subtitle: textOf(shaped.subtitle) || textOf(shaped.second_subtitle)
+		subtitle: textOf(shaped.subtitle) || textOf(shaped.second_subtitle),
+		artist: textOf(shaped.strapline_text_one),
+		art: upscaleArt(thumbFrom(shaped.thumbnail))
 	};
 }
 
@@ -355,22 +360,25 @@ export async function fetchPlaylist(id: string, limit = 100): Promise<{ title: s
 }
 
 /** An album from a browse shelf — its header plus every track. */
-export async function fetchAlbum(id: string): Promise<{ title: string; subtitle: string; tracks: Track[] }> {
+export async function fetchAlbum(
+	id: string
+): Promise<{ title: string; subtitle: string; artist: string; art: string; tracks: Track[] }> {
 	const yt = await getInnertube();
 	const album = await yt.music.getAlbum(id);
-	const { title, subtitle } = headerInfo(album.header);
-	const tracks = collectTracks(album.contents ?? [], '', 200);
-	return { title, subtitle, tracks };
+	const { title, subtitle, artist, art } = headerInfo(album.header);
+	// album rows carry no artist of their own — the header supplies it
+	const tracks = collectTracks(album.contents ?? [], artist, 200);
+	return { title, subtitle, artist, art, tracks };
 }
 
 /** A music playlist from a browse shelf. */
 export async function fetchMusicPlaylist(
 	id: string,
 	limit = 100
-): Promise<{ title: string; subtitle: string; tracks: Track[] }> {
+): Promise<{ title: string; subtitle: string; artist: string; art: string; tracks: Track[] }> {
 	const yt = await getInnertube();
 	const playlist = await yt.music.getPlaylist(id.replace(/^VL/, ''));
-	const { title, subtitle } = headerInfo(playlist.header);
-	const tracks = collectTracks(playlist.items ?? [], '', limit);
-	return { title, subtitle, tracks };
+	const { title, subtitle, artist, art } = headerInfo(playlist.header);
+	const tracks = collectTracks(playlist.items ?? [], artist, limit);
+	return { title, subtitle, artist, art, tracks };
 }

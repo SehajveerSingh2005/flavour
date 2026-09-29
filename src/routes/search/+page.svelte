@@ -1,10 +1,10 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import Icon from '$lib/components/Icon.svelte';
 	import ResultsList from '$lib/components/ResultsList.svelte';
 	import Tile from '$lib/components/Tile.svelte';
 	import { mixes } from '$lib/mixes.svelte';
-	import { player } from '$lib/player.svelte';
 	import { search } from '$lib/search.svelte';
 	import { toasts } from '$lib/toasts.svelte';
 	import type { Collection, Track } from '$lib/types';
@@ -31,21 +31,8 @@
 		return tracks;
 	}
 
-	async function openCollection(item: Collection) {
-		if (opening) return;
-		opening = item.id;
-		try {
-			const tracks = await fetchCollection(item);
-			player.playNow(tracks[0], tracks);
-			toasts.push(
-				`${item.kind === 'album' ? 'Album' : 'Playlist'} · ${tracks.length} tracks queued`,
-				'accent'
-			);
-		} catch {
-			toasts.push(`Could not load that ${item.kind}`, 'error');
-		} finally {
-			opening = null;
-		}
+	function openCollection(item: Collection) {
+		void goto(`/collection/${item.kind}/${item.id}`);
 	}
 
 	async function saveMix(item: Collection) {
@@ -84,8 +71,8 @@
 							title={item.title}
 							subtitle={item.subtitle}
 							{kind}
-							loading={opening === item.id}
-							disabled={opening !== null}
+							action="open"
+							label="Open “{item.title}”"
 							onclick={() => openCollection(item)}
 						/>
 						<button class="save" title="Save as a mix" onclick={() => saveMix(item)}>

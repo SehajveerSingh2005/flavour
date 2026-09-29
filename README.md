@@ -10,7 +10,7 @@ Born from a simple problem: no Spotify at work, but YouTube works fine.
 
 - **Search anything on YouTube** — keyless, powered by YouTube Music's internal API (clean artist / title / duration / square album art), with a regular YouTube fallback for the long tail
 - **Search in two gears** — the field lives in the topbar and results float under it as you type (playable inline, ↑↓ · ↵ · esc); hit ↵ and it commits to a real `/search?q=` page you can refresh, bookmark and go back from
-- **Albums & playlists** — search also returns album and playlist results; one click loads the whole collection into the queue, or save it as a mix
+- **Albums & playlists** — search also returns album and playlist results; clicking one opens its own page (track list, play, shuffle, save as a mix, per-track add). Playing it lands the *album* in recently played, not just its first song
 - **Mixes** — your own playlists: create, add from anywhere (every result row has an add menu), reorder, rename, delete, or save a whole album in one tap. Local-first, snapshotted, no account
 - **Lucky** — plays the top hit immediately, `"artist - song"` style queries just work
 - **Paste a YouTube link** — a video plays straight away, a playlist loads the whole list into the queue
@@ -85,7 +85,7 @@ src/
 │   ├── player.svelte.ts        # the player controller: queue + transport + radio + YouTube wiring
 │   ├── search.svelte.ts        # client search state (text queries and pasted links)
 │   ├── mixes.svelte.ts         # user-made mixes, persisted snapshots
-│   ├── history.svelte.ts       # recently played, persisted
+│   ├── history.svelte.ts       # recently played: tracks and albums/playlists, persisted
 │   ├── ui.svelte.ts            # deck/queue accordion state, persisted
 │   ├── theme.svelte.ts         # flavour switching + persistence
 │   ├── lucky.ts                # the lucky button's seed — your own history, never a fixed list
@@ -99,11 +99,12 @@ src/
     ├── +layout.svelte          # shell: topbar nav + search, persistent deck/queue rail
     ├── +page.svelte            # home: jump back in + your mixes
     ├── search/+page.svelte     # committed search results (/search?q=…)
+    ├── collection/[kind]/[id]/+page.svelte # one album or playlist: play, shuffle, save as a mix
     ├── mixes/+page.svelte      # all mixes
     ├── mixes/[id]/+page.svelte # one mix: play, reorder, rename, delete
     └── api/
         ├── search/+server.ts   # keyless search (YouTube Music + fallback) + album/playlist shelves
-        ├── collection/+server.ts # load an album/playlist shelf into tracks
+        ├── collection/+server.ts # album/playlist header + tracks
         ├── radio/+server.ts    # up-next radio for the current video
         └── resolve/+server.ts  # pasted video/playlist links → tracks
 ```

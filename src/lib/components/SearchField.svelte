@@ -14,7 +14,6 @@
 	/** the panel is open while the field has focus */
 	let open = $state(false);
 	let active = $state(-1);
-	let opening = $state<string | null>(null);
 
 	const q = $derived(search.query.trim());
 	const recentsOpen = $derived(open && !q && search.recents.length > 0);
@@ -100,23 +99,8 @@
 	}
 
 	function openCollection(item: Collection) {
-		if (opening) return;
-		opening = item.id;
-		fetch(`/api/collection?type=${item.kind}&id=${encodeURIComponent(item.id)}`)
-			.then(async (res) => {
-				if (!res.ok) throw new Error('failed');
-				const data = (await res.json()) as { tracks?: Track[] };
-				const tracks = data.tracks ?? [];
-				if (!tracks.length) throw new Error('empty');
-				player.playNow(tracks[0], tracks);
-				toasts.push(
-					`${item.kind === 'album' ? 'Album' : 'Playlist'} · ${tracks.length} tracks queued`,
-					'accent'
-				);
-				close();
-			})
-			.catch(() => toasts.push(`Could not load that ${item.kind}`, 'error'))
-			.finally(() => (opening = null));
+		close();
+		void goto(`/collection/${item.kind}/${item.id}`);
 	}
 
 	function close() {
@@ -237,11 +221,9 @@
 					<p class="panel-sep label">albums · playlists</p>
 					<div class="cols">
 						{#each collections as item (item.id)}
-							<button class="col-tile" onclick={() => openCollection(item)} title="Load “{item.title}”">
+							<button class="col-tile" onclick={() => openCollection(item)} title="Open “{item.title}”">
 								<span class="col-art squircle">
-									{#if opening === item.id}
-										<span class="spinner"></span>
-									{:else if item.art}
+									{#if item.art}
 										<img src={item.art} alt="" loading="lazy" referrerpolicy="no-referrer" />
 									{:else}
 										<Icon name={item.kind === 'album' ? 'disc' : 'list'} size={18} />
@@ -513,11 +495,6 @@
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
-	}
-	.col-art .spinner {
-		width: 14px;
-		height: 14px;
-		border-width: 2px;
 	}
 	.panel-error {
 		display: flex;

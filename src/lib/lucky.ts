@@ -11,7 +11,7 @@ import { search } from './search.svelte';
 export function luckyQuery(): string | null {
 	const typed = search.query.trim();
 	if (typed.length > 1) return typed;
-	const last = history.items[0];
-	if (last?.artist) return last.artist;
+	const last = history.items.find((item) => item.type === 'track');
+	if (last?.type === 'track' && last.track.artist) return last.track.artist;
 	return search.recents[0] ?? null;
 }

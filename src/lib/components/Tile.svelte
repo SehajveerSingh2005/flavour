@@ -6,6 +6,10 @@
 		title: string;
 		subtitle?: string;
 		kind?: 'track' | 'album' | 'playlist';
+		/** the floating affordance: play the track, or open the collection */
+		action?: 'play' | 'open';
+		/** tooltip / accessible label; defaults to “Play …” */
+		label?: string;
 		loading?: boolean;
 		disabled?: boolean;
 		onclick?: () => void;
@@ -16,6 +20,8 @@
 		title,
 		subtitle = '',
 		kind = 'track',
+		action = 'play',
+		label = `Play “${title}”`,
 		loading = false,
 		disabled = false,
 		onclick
@@ -28,7 +34,7 @@
 	};
 </script>
 
-<button class="tile" {disabled} {onclick} title="Play “{title}”">
+<button class="tile" {disabled} {onclick} title={label}>
 	<span class="tile-art squircle">
 		{#if art}
 			<img src={art} alt="" loading="lazy" referrerpolicy="no-referrer" />
@@ -36,7 +42,11 @@
 			<Icon name={fallback[kind]} size={24} />
 		{/if}
 		<span class="tile-badge squircle">
-			{#if loading}<span class="spinner"></span>{:else}<Icon name="play" size={15} />{/if}
+			{#if loading}
+				<span class="spinner"></span>
+			{:else}
+				<Icon name={action === 'open' ? 'chevron-right' : 'play'} size={15} />
+			{/if}
 		</span>
 	</span>
 	<span class="tile-meta">
