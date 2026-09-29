@@ -88,7 +88,7 @@ src/
 │   ├── history.svelte.ts       # recently played, persisted
 │   ├── ui.svelte.ts            # deck/queue accordion state, persisted
 │   ├── theme.svelte.ts         # flavour switching + persistence
-│   ├── quick.ts                # starter searches for empty states + lucky
+│   ├── lucky.ts                # the lucky button's seed — your own history, never a fixed list
 │   ├── youtube.ts              # YouTube link parsing (shared client/server)
 │   ├── mediaSession.ts         # OS media controls
 │   ├── format.ts               # time formatting, title cleanup

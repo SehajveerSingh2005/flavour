@@ -1,17 +1,9 @@
 <script lang="ts">
 	import { formatDuration } from '$lib/format';
 	import { player } from '$lib/player.svelte';
-	import { QUICK } from '$lib/quick';
 	import { search } from '$lib/search.svelte';
-	import { toasts } from '$lib/toasts.svelte';
 	import Icon from './Icon.svelte';
 	import TrackMenu from './TrackMenu.svelte';
-
-	async function quickPick(q: string) {
-		search.setQuery(q);
-		const tracks = await search.run(q);
-		if (!tracks.length && !search.error) toasts.push('Nothing found — try different words', 'error');
-	}
 </script>
 
 {#if search.loading && !search.results.length}
@@ -78,16 +70,9 @@
 		{:else}
 			<p class="display">nothing here yet</p>
 			<p class="muted">
-				type something above — “lofi”, “tame impala”, “songs for pretending to work”. the
-				<strong>lucky</strong> button plays the top hit straight away.
+				type something above — song, artist, or a vibe. the <strong>lucky</strong> button
+				plays the top hit straight away.
 			</p>
-			<div class="quick">
-				{#each QUICK as q (q)}
-					<button class="chip" onclick={() => quickPick(q)}>
-						<Icon name="search" size={13} /> {q}
-					</button>
-				{/each}
-			</div>
 		{/if}
 	</div>
 {/if}
@@ -193,13 +178,6 @@
 	}
 	.placeholder p.muted {
 		max-width: 46ch;
-	}
-	.quick {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 8px;
-		justify-content: center;
-		margin-top: 6px;
 	}
 
 	/* skeletons */

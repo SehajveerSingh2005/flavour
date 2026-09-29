@@ -6,6 +6,7 @@
 	import { isYouTubeLink } from '$lib/youtube';
 	import type { Collection, Track } from '$lib/types';
 	import Icon from './Icon.svelte';
+	import TrackMenu from './TrackMenu.svelte';
 
 	let input = $state<HTMLInputElement | null>(null);
 	let wrap = $state<HTMLDivElement | null>(null);
@@ -209,24 +210,27 @@
 
 			<div class="panel-body">
 				{#each search.results.slice(0, 5) as track (track.id)}
-					<button
-						class="track-row"
-						onclick={() => {
-							player.playNow(track, search.results);
-							close();
-						}}
-						title="Play “{track.title}”"
-					>
-						{#if track.art}
-							<img class="row-art squircle" src={track.art} alt="" loading="lazy" referrerpolicy="no-referrer" />
-						{:else}
-							<span class="row-art squircle fallback"><Icon name="music" size={14} /></span>
-						{/if}
-						<span class="row-meta">
-							<strong class="truncate">{track.title}</strong>
-							<em class="truncate">{track.artist}</em>
-						</span>
-					</button>
+					<div class="track-row">
+						<button
+							class="row-main"
+							onclick={() => {
+								player.playNow(track, search.results);
+								close();
+							}}
+							title="Play “{track.title}”"
+						>
+							{#if track.art}
+								<img class="row-art squircle" src={track.art} alt="" loading="lazy" referrerpolicy="no-referrer" />
+							{:else}
+								<span class="row-art squircle fallback"><Icon name="music" size={14} /></span>
+							{/if}
+							<span class="row-meta">
+								<strong class="truncate">{track.title}</strong>
+								<em class="truncate">{track.artist}</em>
+							</span>
+						</button>
+						<TrackMenu {track} size={15} />
+					</div>
 				{/each}
 
 				{#if collections.length && !search.loading}
@@ -420,14 +424,12 @@
 	}
 	.track-row {
 		display: grid;
-		grid-template-columns: auto minmax(0, 1fr) auto;
+		grid-template-columns: minmax(0, 1fr) auto;
 		align-items: center;
-		gap: 9px;
-		padding: 5px 7px;
+		gap: 6px;
+		padding: 2px 4px 2px 0;
 		border: 2px solid transparent;
 		border-radius: 12px;
-		text-align: left;
-		cursor: pointer;
 		transition:
 			background-color 0.13s ease,
 			border-color 0.13s ease;
@@ -435,6 +437,16 @@
 	.track-row:hover {
 		background: var(--accent-soft);
 		border-color: var(--ink);
+	}
+	.row-main {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		align-items: center;
+		gap: 9px;
+		padding: 5px 6px 5px 7px;
+		min-width: 0;
+		text-align: left;
+		cursor: pointer;
 	}
 	.row-art {
 		display: grid;

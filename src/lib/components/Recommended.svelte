@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { history } from '$lib/history.svelte';
 	import { player } from '$lib/player.svelte';
-	import { QUICK } from '$lib/quick';
 	import { toasts } from '$lib/toasts.svelte';
 	import type { Collection, Track } from '$lib/types';
 	import Tile from './Tile.svelte';
@@ -17,6 +16,12 @@
 	$effect(() => {
 		if (!history.hydrated) return;
 		const seed = history.items[0]?.artist ?? '';
+		if (!seed) {
+			// nothing played yet — no hardcoded suggestions, the shelf stays hidden
+			items = [];
+			ready = true;
+			return;
+		}
 		if (seed === tried) return;
 		tried = seed;
 		const hit = cache.get(seed);
@@ -29,30 +34,13 @@
 		void load(seed);
 	});
 
+	/** one search, straight from the artist played last */
 	async function load(seed: string) {
-		const queries = [seed, ...QUICK]
-			.filter((q, i, all) => q.length > 1 && all.findIndex((x) => x.toLowerCase() === q.toLowerCase()) === i)
-			.slice(0, 3);
 		try {
-			const batches = await Promise.all(
-				queries.map(async (q) => {
-					const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
-					if (!res.ok) return [] as Collection[];
-					const data = (await res.json()) as { albums?: Collection[]; playlists?: Collection[] };
-					return [...(data.albums ?? []), ...(data.playlists ?? [])].slice(0, 3);
-				})
-			);
-			const merged: Collection[] = [];
-			const seen = new Set<string>();
-			// round-robin so every seed gets its covers on the first row
-			for (let round = 0; round < 3; round++) {
-				for (const batch of batches) {
-					const item = batch[round];
-					if (!item || seen.has(item.id) || merged.length >= 8) continue;
-					seen.add(item.id);
-					merged.push(item);
-				}
-			}
+			const res = await fetch(`/api/search?q=${encodeURIComponent(seed)}`);
+			if (!res.ok) return;
+			const data = (await res.json()) as { albums?: Collection[]; playlists?: Collection[] };
+			const merged = [...(data.albums ?? []), ...(data.playlists ?? [])].slice(0, 8);
 			cache.set(seed, merged);
 			if (tried !== seed) return;
 			items = merged;

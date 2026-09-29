@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { formatTime } from '$lib/format';
+	import { luckyQuery } from '$lib/lucky';
 	import { player } from '$lib/player.svelte';
-	import { QUICK } from '$lib/quick';
 	import { search } from '$lib/search.svelte';
 	import { toasts } from '$lib/toasts.svelte';
 	import { ui } from '$lib/ui.svelte';
 	import Icon from './Icon.svelte';
+	import TrackMenu from './TrackMenu.svelte';
 
 	let dragging = $state<number | null>(null);
 	let artFailed = $state(false);
@@ -33,10 +34,13 @@
 		}
 	});
 
-	/** Empty deck: lucky takes the typed query, or gambles on a quick pick. */
+	/** Empty deck: lucky takes the typed query, or leans on your own listening. */
 	async function lucky() {
-		const typed = search.query.trim();
-		const q = typed.length > 1 ? typed : QUICK[Math.floor(Math.random() * QUICK.length)];
+		const q = luckyQuery();
+		if (!q) {
+			toasts.push('Nothing to gamble on yet — search something first', 'error');
+			return;
+		}
 		search.setQuery(q);
 		const tracks = await search.run(q);
 		if (!tracks.length && !search.error) {
@@ -73,6 +77,7 @@
 			{#if player.isPlaying}
 				<span class="eq" class:paused={loading} aria-hidden="true"><i></i><i></i><i></i><i></i></span>
 			{/if}
+			<TrackMenu track={track} size={16} />
 			<button
 				class="btn btn--icon bar-btn"
 				title="Back to the poster"
@@ -204,6 +209,7 @@
 			>
 				<Icon name="maximize" size={16} />
 			</button>
+			<TrackMenu track={track} size={16} />
 		</div>
 	{:else}
 		<!-- quiet deck: the welcome hero lives on home now -->
@@ -453,7 +459,7 @@
 	/* ---------- compact bar ---------- */
 	.bar {
 		display: grid;
-		grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+		grid-template-columns: auto minmax(0, 1fr) auto auto auto auto;
 		align-items: center;
 		gap: 9px;
 	}

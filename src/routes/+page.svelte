@@ -5,25 +5,22 @@
 	import Recommended from '$lib/components/Recommended.svelte';
 	import Tile from '$lib/components/Tile.svelte';
 	import { history } from '$lib/history.svelte';
+	import { luckyQuery } from '$lib/lucky';
 	import { mixes } from '$lib/mixes.svelte';
 	import { player } from '$lib/player.svelte';
-	import { QUICK } from '$lib/quick';
 	import { search } from '$lib/search.svelte';
 	import { toasts } from '$lib/toasts.svelte';
 
 	let creating = $state(false);
 	let name = $state('');
 
-	async function quickPick(q: string) {
-		search.setQuery(q);
-		const tracks = await search.run(q);
-		if (!tracks.length && !search.error) toasts.push('Nothing found — try different words', 'error');
-	}
-
-	/** lucky: play the typed query's top hit, or gamble on a quick pick */
+	/** lucky: the typed query's top hit, or a gamble on your own listening */
 	async function lucky() {
-		const typed = search.query.trim();
-		const q = typed.length > 1 ? typed : QUICK[Math.floor(Math.random() * QUICK.length)];
+		const q = luckyQuery();
+		if (!q) {
+			toasts.push('Nothing to gamble on yet — search something first', 'error');
+			return;
+		}
 		search.setQuery(q);
 		const tracks = await search.run(q);
 		if (!tracks.length && !search.error) {
@@ -55,14 +52,7 @@
 			</div>
 			<span class="badge">nothing on the menu</span>
 			<h1 class="display">press play on something delicious</h1>
-			<p class="muted">Search up top — or start with one of these:</p>
-			<div class="quick">
-				{#each QUICK as q (q)}
-					<button class="chip" onclick={() => quickPick(q)}>
-						<Icon name="search" size={13} /> {q}
-					</button>
-				{/each}
-			</div>
+			<p class="muted">Search up top, paste a YouTube link, or let lucky surprise you.</p>
 			<button class="btn btn--accent" onclick={lucky}>
 				<Icon name="sparkles" size={15} /> lucky
 			</button>
@@ -212,13 +202,6 @@
 	}
 	.welcome p {
 		font-size: 0.92rem;
-	}
-	.quick {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 8px;
-		justify-content: center;
-		margin-top: 4px;
 	}
 
 	/* ---------- shelves ---------- */

@@ -5,7 +5,6 @@
 	import Tile from '$lib/components/Tile.svelte';
 	import { mixes } from '$lib/mixes.svelte';
 	import { player } from '$lib/player.svelte';
-	import { QUICK } from '$lib/quick';
 	import { search } from '$lib/search.svelte';
 	import { toasts } from '$lib/toasts.svelte';
 	import type { Collection, Track } from '$lib/types';
@@ -63,10 +62,6 @@
 		}
 	}
 
-	function quickPick(text: string) {
-		search.setQuery(text);
-		void search.run(text);
-	}
 </script>
 
 <svelte:head>
@@ -107,16 +102,7 @@
 	<section class="card empty">
 		<Icon name="search" size={26} />
 		<h1 class="display">search something</h1>
-		<p class="muted">
-			type in the field up top, paste a YouTube link, or start with one of these:
-		</p>
-		<div class="quick">
-			{#each QUICK as item (item)}
-				<button class="chip" onclick={() => quickPick(item)}>
-					<Icon name="search" size={13} /> {item}
-				</button>
-			{/each}
-		</div>
+		<p class="muted">type in the field up top, or paste a YouTube link.</p>
 	</section>
 {:else}
 	<div class="search-page">
@@ -264,13 +250,6 @@
 	}
 	.empty h1 {
 		font-size: 1.5rem;
-	}
-	.quick {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 8px;
-		justify-content: center;
-		margin-top: 6px;
 	}
 	@media (max-width: 1080px) {
 		.results-cols {
