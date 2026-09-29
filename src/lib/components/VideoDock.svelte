@@ -19,7 +19,7 @@
 			<strong class="truncate">{player.current?.title ?? ''}</strong>
 			<span class="muted truncate">{player.current?.artist ?? ''}</span>
 			<button
-				class="btn btn--icon"
+				class="btn btn--icon btn--round"
 				title="Exit immersive (Esc)"
 				aria-label="Exit immersive mode"
 				onclick={() => player.setImmersive(false)}
@@ -100,6 +100,13 @@
 		border-radius: var(--pill);
 		background: var(--surface);
 		box-shadow: var(--shadow-sm);
+	}
+	/* the exit control is round, and the hard shadow hangs bottom-right —
+	   give it its own room so the button still reads dead-centre in the pill */
+	.caption .btn {
+		width: 40px;
+		height: 40px;
+		margin: 0 4px 4px 0;
 	}
 	@media (max-width: 700px) {
 		.caption {

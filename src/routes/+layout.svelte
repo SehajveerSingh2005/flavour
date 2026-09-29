@@ -16,7 +16,6 @@
 	import { mixes } from '$lib/mixes.svelte';
 	import { player } from '$lib/player.svelte';
 	import { search } from '$lib/search.svelte';
-	import { theme } from '$lib/theme.svelte';
 	import { ui } from '$lib/ui.svelte';
 
 	let { children } = $props();
@@ -27,7 +26,6 @@
 	const onMixes = $derived(path.startsWith('/mixes'));
 
 	onMount(() => {
-		theme.init();
 		search.hydrate();
 		history.hydrate();
 		mixes.hydrate();
@@ -153,11 +151,6 @@
 			</aside>
 		</div>
 	</main>
-
-	<footer class="footer muted">
-		<span>press <kbd>?</kbd> for shortcuts</span>
-		<span>paste a YouTube link anywhere to play it</span>
-	</footer>
 </div>
 
 <VideoDock />
@@ -278,7 +271,9 @@
 		.main {
 			display: grid;
 			min-height: 0;
-			padding-bottom: clamp(14px, 1.6vw, 20px);
+			/* the scroll columns run to the window edge — their own bottom
+			   padding carries the last card's breathing room */
+			padding-bottom: 0;
 		}
 		.stage {
 			display: grid;
@@ -292,8 +287,16 @@
 			min-height: 0;
 			overflow-y: auto;
 			overscroll-behavior: contain;
+			/* paint the flavoured paper on the scroller itself: a scroll layer
+			   that borrows the page background can keep a stale flavour cached
+			   after a theme switch. fixed attachment keeps the dots aligned
+			   with the page's own grid. */
+			background-color: var(--bg);
+			background-image: var(--paper);
+			background-size: 24px 24px;
+			background-attachment: fixed;
 			/* room for the cards' hard shadows before the scroll clip */
-			padding: 2px 10px 10px 2px;
+			padding: 2px 10px 16px 2px;
 		}
 		.rail {
 			display: grid;
@@ -304,7 +307,11 @@
 			min-height: 0;
 			/* a short window scrolls the rail instead of clipping the deck */
 			overflow-y: auto;
-			padding: 2px 10px 10px 2px;
+			background-color: var(--bg);
+			background-image: var(--paper);
+			background-size: 24px 24px;
+			background-attachment: fixed;
+			padding: 2px 10px 16px 2px;
 			scrollbar-width: thin;
 		}
 		.rail.queue-open {
@@ -342,22 +349,6 @@
 			display: contents;
 		}
 	}
-	.footer {
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		gap: 22px;
-		flex-wrap: wrap;
-		padding: 14px;
-		border-top: 2px dashed var(--faint);
-		font-size: 0.75rem;
-		font-weight: 600;
-	}
-	@media (min-width: 961px) and (max-height: 800px) {
-		.footer {
-			display: none;
-		}
-	}
 	@media (max-width: 960px) {
 		.topbar {
 			flex-wrap: wrap;
@@ -386,8 +377,7 @@
 		}
 	}
 	@media (max-width: 700px) {
-		.now,
-		.footer {
+		.now {
 			display: none;
 		}
 	}

@@ -214,7 +214,7 @@
 			</div>
 			<h2 class="display">nothing on the deck</h2>
 			<p class="muted">Pick something fresh above, or let lucky gamble for you.</p>
-			<button class="btn btn--pop" onclick={lucky}>
+			<button class="btn btn--accent" onclick={lucky}>
 				<Icon name="sparkles" size={15} /> lucky
 			</button>
 		</div>
@@ -418,6 +418,11 @@
 	}
 	.play:hover {
 		box-shadow: var(--shadow);
+	}
+	/* this button grows its shadow on hover, so the press must collapse it —
+	   otherwise the button and shadow slide down together instead of clicking */
+	.play:active {
+		box-shadow: 0 0 0 var(--ink);
 	}
 	.play--sm {
 		width: 42px;

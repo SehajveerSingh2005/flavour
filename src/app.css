@@ -18,6 +18,8 @@
 	--muted: color-mix(in srgb, var(--ink) 62%, transparent);
 	--faint: color-mix(in srgb, var(--ink) 13%, transparent);
 	--accent-soft: color-mix(in srgb, var(--accent) 16%, var(--surface));
+	/* the page's dotted paper — shared so the scroll columns can paint it too */
+	--paper: radial-gradient(color-mix(in srgb, var(--ink) 9%, transparent) 1.4px, transparent 1.4px);
 	--ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
 	--t: 0.16s var(--ease-pop);
 	/* sticky topbar height — things that stick beneath it use this */
@@ -122,10 +124,7 @@ body {
 	line-height: 1.45;
 	color: var(--ink);
 	background-color: var(--bg);
-	background-image: radial-gradient(
-		color-mix(in srgb, var(--ink) 9%, transparent) 1.4px,
-		transparent 1.4px
-	);
+	background-image: var(--paper);
 	background-size: 24px 24px;
 	transition:
 		background-color 0.4s ease,
@@ -258,6 +257,11 @@ img {
 	border-radius: 16px;
 	corner-shape: squircle;
 	font-size: 1.05rem;
+}
+/* a truly round icon button — squircle is the house shape, circles opt in */
+.btn--round {
+	border-radius: 50%;
+	corner-shape: round;
 }
 .btn--big {
 	padding: 0.9rem 1.5rem;

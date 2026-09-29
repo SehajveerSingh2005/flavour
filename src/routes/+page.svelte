@@ -63,7 +63,7 @@
 					</button>
 				{/each}
 			</div>
-			<button class="btn btn--pop" onclick={lucky}>
+			<button class="btn btn--accent" onclick={lucky}>
 				<Icon name="sparkles" size={15} /> lucky
 			</button>
 		</section>
@@ -149,11 +149,17 @@
 		gap: 9px;
 		padding: clamp(20px, 3vw, 32px) 20px;
 		text-align: center;
+		/* both stops come from the flavour's primary colour, so the empty card
+		   reads as the same flavour as the player deck — not the secondary tone */
 		background: linear-gradient(
 			118deg,
 			color-mix(in srgb, var(--accent) 13%, var(--surface)),
-			color-mix(in srgb, var(--pop) 15%, var(--surface))
+			color-mix(in srgb, var(--accent) 30%, var(--surface))
 		);
+	}
+	.welcome .badge {
+		background: var(--accent);
+		color: var(--accent-ink);
 	}
 	.welcome-art {
 		position: relative;
