@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { formatTime } from '$lib/format';
+	import { likes } from '$lib/likes.svelte';
 	import { luckyQuery } from '$lib/lucky';
 	import { lyrics } from '$lib/lyrics.svelte';
 	import { player } from '$lib/player.svelte';
@@ -55,6 +56,16 @@
 			return;
 		}
 		if (tracks[0]) player.playNow(tracks[0], tracks);
+	}
+
+	/** The heart on the sleeve. */
+	function toggleLike() {
+		if (!track) return;
+		const liked = likes.toggle(track);
+		toasts.push(
+			liked ? `liked “${track.title}”` : `took “${track.title}” out of likes`,
+			liked ? 'accent' : 'info'
+		);
 	}
 </script>
 
@@ -245,12 +256,14 @@
 				<Icon name="quote" size={16} />
 			</button>
 			<button
-				class="btn btn--icon tiny watch"
-				title="Watch the video (F)"
-				aria-label="Watch the video"
-				onclick={() => player.setImmersive(true)}
+				class="btn btn--icon tiny like-btn"
+				class:btn--on={likes.has(track.id)}
+				title={likes.has(track.id) ? 'Unlike' : 'Like'}
+				aria-label={likes.has(track.id) ? 'Unlike' : 'Like'}
+				aria-pressed={likes.has(track.id)}
+				onclick={toggleLike}
 			>
-				<Icon name="maximize" size={16} />
+				<Icon name={likes.has(track.id) ? 'heart-filled' : 'heart'} size={16} />
 			</button>
 			<TrackMenu track={track} size={16} />
 		</div>

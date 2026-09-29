@@ -163,8 +163,8 @@ await shoot('11-lyrics');
 await page.click('.lyrics-close');
 await sleep(400);
 
-// 6 ── immersive mode
-await page.click('.np .watch');
+// 6 ── immersive mode: click the sleeve
+await page.click('.np .poster-art');
 await sleep(1600);
 await shoot('06-immersive');
 await page.keyboard.press('Escape');

@@ -207,7 +207,6 @@
 		place-items: center;
 		width: 168px;
 		aspect-ratio: 1;
-		padding: 4px;
 		border: 2px solid var(--ink);
 		border-radius: 24px;
 		background: linear-gradient(
@@ -223,7 +222,6 @@
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
-		border-radius: 14px;
 	}
 	.info {
 		display: grid;
