@@ -376,6 +376,21 @@
 			order: 3;
 		}
 	}
+	@media (max-width: 640px) {
+		/* the field drops to its own full-width row — squeezed into the first
+		   row it had no room to show what you were typing */
+		.search-slot {
+			order: 2;
+			flex-basis: 100%;
+		}
+		.help {
+			order: 1;
+			margin-left: auto;
+		}
+		.picker-slot {
+			order: 1;
+		}
+	}
 	@media (max-width: 700px) {
 		.now {
 			display: none;

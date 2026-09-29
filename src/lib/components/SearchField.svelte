@@ -547,14 +547,16 @@
 		}
 	}
 	@media (max-width: 640px) {
+		.searchwrap {
+			width: 100%;
+		}
 		.slash {
 			display: none;
 		}
 		.panel {
-			position: fixed;
-			top: 122px;
-			left: 10px;
-			right: 10px;
+			top: calc(100% + 10px);
+			left: 0;
+			right: 0;
 		}
 	}
 </style>
