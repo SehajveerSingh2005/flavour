@@ -56,7 +56,7 @@
 	}
 
 	function toggleLike() {
-		const liked = likes.toggle(track);
+		const liked = likes.toggleTrack(track);
 		toasts.push(liked ? `liked “${track.title}”` : `took “${track.title}” out of likes`, liked ? 'accent' : 'info');
 	}
 </script>
@@ -83,8 +83,8 @@
 			<Icon name="plus" size={15} /> add to queue
 		</button>
 		<button class="menu-item" role="menuitem" onclick={() => act(toggleLike)}>
-			<Icon name={likes.has(track.id) ? 'heart-filled' : 'heart'} size={15} />
-			{likes.has(track.id) ? 'unlike' : 'like'}
+			<Icon name={likes.hasTrack(track.id) ? 'heart-filled' : 'heart'} size={15} />
+			{likes.hasTrack(track.id) ? 'unlike' : 'like'}
 		</button>
 		<p class="menu-sep label">add to mix</p>
 		{#each mixes.items as mix (mix.id)}

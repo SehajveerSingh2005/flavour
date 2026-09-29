@@ -5,6 +5,7 @@
 	import TrackMenu from '$lib/components/TrackMenu.svelte';
 	import { formatDuration, formatRuntime } from '$lib/format';
 	import { history } from '$lib/history.svelte';
+	import { likes } from '$lib/likes.svelte';
 	import { mixes } from '$lib/mixes.svelte';
 	import { player } from '$lib/player.svelte';
 	import { toasts } from '$lib/toasts.svelte';
@@ -105,6 +106,23 @@
 		const mix = mixes.create(data.title, tracks);
 		toasts.push(`saved as “${mix.name}” · ${tracks.length} tracks`, 'accent');
 	}
+
+	const liked = $derived(data ? likes.hasCollection(kind, id) : false);
+
+	function toggleLike() {
+		if (!data) return;
+		const likedNow = likes.toggleCollection({
+			kind,
+			id,
+			title: data.title,
+			subtitle: meta.join(' · ') || data.subtitle,
+			art
+		});
+		toasts.push(
+			likedNow ? `liked “${data.title}”` : `took “${data.title}” out of likes`,
+			likedNow ? 'accent' : 'info'
+		);
+	}
 </script>
 
 <svelte:head>
@@ -151,6 +169,15 @@
 					</button>
 					<button class="btn" onclick={shuffle}>
 						<Icon name="shuffle" size={15} /> shuffle
+					</button>
+					<button
+						class="btn"
+						class:btn--on={liked}
+						onclick={toggleLike}
+						title={liked ? 'Remove from likes' : 'Add to likes'}
+					>
+						<Icon name={liked ? 'heart-filled' : 'heart'} size={15} />
+						{liked ? 'liked' : 'like'}
 					</button>
 					<button class="btn" onclick={saveMix} title="Save the whole thing as a mix">
 						<Icon name="plus" size={15} /> save as mix

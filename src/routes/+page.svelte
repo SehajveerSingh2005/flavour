@@ -126,14 +126,26 @@
 				<span class="label mono">{likes.items.length}</span>
 			</header>
 			<ul class="covers">
-				{#each likes.items as track (track.id)}
+				{#each likes.items as item, i (item.type === 'track' ? `t${i}:${item.track.id}` : `c${i}:${item.id}`)}
 					<li>
-						<Tile
-							art={track.art}
-							title={track.title}
-							subtitle={track.artist}
-							onclick={() => player.playNow(track, likes.items)}
-						/>
+						{#if item.type === 'track'}
+							<Tile
+								art={item.track.art}
+								title={item.track.title}
+								subtitle={item.track.artist}
+								onclick={() => player.playNow(item.track, likes.tracks)}
+							/>
+						{:else}
+							<Tile
+								art={item.art}
+								title={item.title}
+								subtitle={item.subtitle}
+								kind={item.type}
+								action="open"
+								label="Open “{item.title}”"
+								onclick={() => goto(`/collection/${item.type}/${item.id}`)}
+							/>
+						{/if}
 					</li>
 				{/each}
 			</ul>

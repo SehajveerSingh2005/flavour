@@ -140,7 +140,7 @@
 
 	function toggleLike(track: Track | undefined) {
 		if (!track) return;
-		const liked = likes.toggle(track);
+		const liked = likes.toggleTrack(track);
 		toasts.push(
 			liked ? `liked “${track.title}”` : `took “${track.title}” out of likes`,
 			liked ? 'accent' : 'info'
@@ -379,8 +379,8 @@
 			<Icon name="play-next" size={15} /> play next
 		</button>
 		<button class="menu-item" role="menuitem" onclick={() => act(() => toggleLike(rowTrack))}>
-			<Icon name={rowTrack && likes.has(rowTrack.id) ? 'heart-filled' : 'heart'} size={15} />
-			{rowTrack && likes.has(rowTrack.id) ? 'unlike' : 'like'}
+			<Icon name={rowTrack && likes.hasTrack(rowTrack.id) ? 'heart-filled' : 'heart'} size={15} />
+			{rowTrack && likes.hasTrack(rowTrack.id) ? 'unlike' : 'like'}
 		</button>
 		<button
 			class="menu-item"

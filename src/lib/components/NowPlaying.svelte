@@ -61,7 +61,7 @@
 	/** The heart on the sleeve. */
 	function toggleLike() {
 		if (!track) return;
-		const liked = likes.toggle(track);
+		const liked = likes.toggleTrack(track);
 		toasts.push(
 			liked ? `liked “${track.title}”` : `took “${track.title}” out of likes`,
 			liked ? 'accent' : 'info'
@@ -257,13 +257,13 @@
 			</button>
 			<button
 				class="btn btn--icon tiny like-btn"
-				class:btn--on={likes.has(track.id)}
-				title={likes.has(track.id) ? 'Unlike' : 'Like'}
-				aria-label={likes.has(track.id) ? 'Unlike' : 'Like'}
-				aria-pressed={likes.has(track.id)}
+				class:btn--on={likes.hasTrack(track.id)}
+				title={likes.hasTrack(track.id) ? 'Unlike' : 'Like'}
+				aria-label={likes.hasTrack(track.id) ? 'Unlike' : 'Like'}
+				aria-pressed={likes.hasTrack(track.id)}
 				onclick={toggleLike}
 			>
-				<Icon name={likes.has(track.id) ? 'heart-filled' : 'heart'} size={16} />
+				<Icon name={likes.hasTrack(track.id) ? 'heart-filled' : 'heart'} size={16} />
 			</button>
 			<TrackMenu track={track} size={16} />
 		</div>

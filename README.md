@@ -21,7 +21,7 @@ Born from a simple problem: no Spotify at work, but YouTube works fine.
 - **Poster deck + up-next queue** — the rail holds a cover-forward deck with the record slipping out of the sleeve; when the queue opens the deck folds into a compact bar and the list takes the rail, so nothing is ever squeezed. The queue shows the current track plus the next one before you open it
 - **Routed pages, one player** — home (library), search, mixes; the deck and hidden video never unmount, so playback is never interrupted by navigation
 - **Recently played** — the last dozen tracks you played, one tap away on home (and cleared when you clear them)
-- **Likes** — heart any track from its `+` menu; liked songs get their own shelf on home
+- **Likes** — heart tracks from the deck or `+` menu, and albums/playlists from their page or the search shelves; everything lands on the liked shelf on home
 - **Lyrics** — the deck flips into a song sheet (`l`), straight from YouTube Music, with a gentle "no lyrics" note for videos outside the catalogue
 - **Saved queues** — turn the whole queue into a mix with a name, from the queue's `⋯` menu
 - **First-run tour** — a short welcome on a fresh browser, replayable from the cheat sheet

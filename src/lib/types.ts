@@ -42,3 +42,8 @@ export interface HistoryCollection {
 	art: string;
 }
 export type HistoryItem = HistoryTrack | HistoryCollection;
+
+/** A liked track or collection — same shape as history, different shelf. */
+export type LikedTrack = HistoryTrack;
+export type LikedCollection = HistoryCollection;
+export type LikedItem = LikedTrack | LikedCollection;

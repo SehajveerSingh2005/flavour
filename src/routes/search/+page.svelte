@@ -5,6 +5,7 @@
 	import ResultsList from '$lib/components/ResultsList.svelte';
 	import Tile from '$lib/components/Tile.svelte';
 	import { mixes } from '$lib/mixes.svelte';
+	import { likes } from '$lib/likes.svelte';
 	import { search } from '$lib/search.svelte';
 	import { toasts } from '$lib/toasts.svelte';
 	import type { Collection, Track } from '$lib/types';
@@ -49,6 +50,20 @@
 		}
 	}
 
+	function toggleLike(item: Collection) {
+		const liked = likes.toggleCollection({
+			kind: item.kind,
+			id: item.id,
+			title: item.title,
+			subtitle: item.subtitle,
+			art: item.art
+		});
+		toasts.push(
+			liked ? `liked “${item.title}”` : `took “${item.title}” out of likes`,
+			liked ? 'accent' : 'info'
+		);
+	}
+
 </script>
 
 <svelte:head>
@@ -75,6 +90,16 @@
 							label="Open “{item.title}”"
 							onclick={() => openCollection(item)}
 						/>
+						<button
+							class="like"
+							class:on={likes.hasCollection(item.kind, item.id)}
+							title={likes.hasCollection(item.kind, item.id) ? 'Unlike' : 'Like'}
+							aria-label={likes.hasCollection(item.kind, item.id) ? `Unlike “${item.title}”` : `Like “${item.title}”`}
+							aria-pressed={likes.hasCollection(item.kind, item.id)}
+							onclick={() => toggleLike(item)}
+						>
+							<Icon name={likes.hasCollection(item.kind, item.id) ? 'heart-filled' : 'heart'} size={13} />
+						</button>
 						<button class="save" title="Save as a mix" onclick={() => saveMix(item)}>
 							<Icon name="plus" size={13} />
 						</button>
@@ -189,10 +214,10 @@
 		position: relative;
 		min-width: 0;
 	}
-	.save {
+	.save,
+	.like {
 		position: absolute;
 		top: 7px;
-		right: 7px;
 		z-index: 2;
 		display: grid;
 		place-items: center;
@@ -208,15 +233,30 @@
 			opacity 0.15s ease,
 			transform var(--t);
 	}
+	.save {
+		right: 7px;
+	}
+	.like {
+		left: 7px;
+	}
+	.like.on {
+		opacity: 1;
+		background: var(--accent);
+		color: var(--accent-ink);
+	}
 	.coll:hover .save,
-	.save:focus-visible {
+	.coll:hover .like,
+	.save:focus-visible,
+	.like:focus-visible {
 		opacity: 1;
 	}
-	.save:hover {
+	.save:hover,
+	.like:hover {
 		transform: translate(-1px, -1px);
 	}
 	@media (hover: none) {
-		.save {
+		.save,
+		.like {
 			opacity: 1;
 		}
 	}
