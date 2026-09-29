@@ -17,6 +17,10 @@
 	let creating = $state(false);
 	let name = $state('');
 
+	/** home shows a taste — the shelf holds the rest */
+	const HOME_LIKES = 8;
+	const HOME_MIXES = 6;
+
 	/** the queue a past track plays in: the tracks you played, in order */
 	const playedTracks = $derived(
 		history.items.filter((item): item is HistoryTrack => item.type === 'track').map((item) => item.track)
@@ -124,9 +128,12 @@
 				<span class="label mono">liked</span>
 				<span class="grow"></span>
 				<span class="label mono">{likes.items.length}</span>
+				{#if likes.items.length > HOME_LIKES}
+					<button class="mini-btn" onclick={() => goto('/shelf')}>see all</button>
+				{/if}
 			</header>
 			<ul class="covers">
-				{#each likes.items as item, i (item.type === 'track' ? `t${i}:${item.track.id}` : `c${i}:${item.id}`)}
+				{#each likes.items.slice(0, HOME_LIKES) as item, i (item.type === 'track' ? `t${i}:${item.track.id}` : `c${i}:${item.id}`)}
 					<li>
 						{#if item.type === 'track'}
 							<Tile
@@ -161,9 +168,12 @@
 			{#if mixes.items.length}
 				<span class="label mono">{mixes.items.length}</span>
 			{/if}
+			{#if mixes.items.length > HOME_MIXES}
+				<button class="mini-btn" onclick={() => goto('/shelf?filter=mixes')}>see all</button>
+			{/if}
 		</header>
 		<ul class="tiles">
-			{#each mixes.items as mix (mix.id)}
+			{#each mixes.items.slice(0, HOME_MIXES) as mix (mix.id)}
 				<li><MixTile {mix} onclick={() => goto(`/mixes/${mix.id}`)} /></li>
 			{/each}
 			<li>

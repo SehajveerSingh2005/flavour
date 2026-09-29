@@ -27,7 +27,7 @@
 
 	const path = $derived(page.url.pathname);
 	const onSearch = $derived(path.startsWith('/search'));
-	const onMixes = $derived(path.startsWith('/mixes'));
+	const onShelf = $derived(path.startsWith('/shelf') || path.startsWith('/mixes'));
 
 	onMount(() => {
 		search.hydrate();
@@ -135,7 +135,7 @@
 		<nav class="nav" aria-label="Primary">
 			<a class="nav-link" class:on={path === '/'} href="/">home</a>
 			<a class="nav-link" class:on={onSearch} href="/search">search</a>
-			<a class="nav-link" class:on={onMixes} href="/mixes">mixes</a>
+			<a class="nav-link" class:on={onShelf} href="/shelf">shelf</a>
 		</nav>
 		<div class="search-slot"><SearchField /></div>
 		<span class="spacer"></span>

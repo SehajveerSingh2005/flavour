@@ -56,7 +56,7 @@
 			return;
 		}
 		mixes.remove(mix.id);
-		void goto('/mixes');
+		void goto('/shelf?filter=mixes');
 	}
 
 	/* ---------- drag to reorder ---------- */
@@ -97,7 +97,7 @@
 	<section class="card missing">
 		<h1 class="display">that mix is gone</h1>
 		<p class="muted">it may have been deleted on another device.</p>
-		<button class="btn btn--accent" onclick={() => goto('/mixes')}>
+		<button class="btn btn--accent" onclick={() => goto('/shelf?filter=mixes')}>
 			<Icon name="list" size={15} /> all mixes
 		</button>
 	</section>

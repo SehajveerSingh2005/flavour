@@ -21,7 +21,8 @@ Born from a simple problem: no Spotify at work, but YouTube works fine.
 - **Poster deck + up-next queue** — the rail holds a cover-forward deck with the record slipping out of the sleeve; when the queue opens the deck folds into a compact bar and the list takes the rail, so nothing is ever squeezed. The queue shows the current track plus the next one before you open it
 - **Routed pages, one player** — home (library), search, mixes; the deck and hidden video never unmount, so playback is never interrupted by navigation
 - **Recently played** — the last dozen tracks you played, one tap away on home (and cleared when you clear them)
-- **Likes** — heart tracks from the deck or `+` menu, and albums/playlists from their page or the search shelves; everything lands on the liked shelf on home
+- **The shelf** — everything you keep in one place: liked tracks, liked albums and playlists, and your mixes, with filters (`all · tracks · albums · playlists · mixes`)
+- **Likes** — heart tracks from the deck or `+` menu, and albums/playlists from their page or the search shelves
 - **Lyrics** — the deck flips into a song sheet (`l`), straight from YouTube Music, with a gentle "no lyrics" note for videos outside the catalogue
 - **Saved queues** — turn the whole queue into a mix with a name, from the queue's `⋯` menu
 - **First-run tour** — a short welcome on a fresh browser, replayable from the cheat sheet
@@ -43,6 +44,10 @@ Born from a simple problem: no Spotify at work, but YouTube works fine.
 | First run | Lyrics on the deck |
 | --- | --- |
 | ![Welcome tour](screenshots/00-welcome.png) | ![Lyrics](screenshots/11-lyrics.png) |
+
+| The shelf |
+| --- |
+| ![The shelf](screenshots/12-shelf.png) |
 
 ## Stack
 
@@ -114,8 +119,9 @@ src/
     ├── +layout.svelte          # shell: topbar nav + search, persistent deck/queue rail
     ├── +page.svelte            # home: jump back in, liked, recommended, your mixes, backup
     ├── search/+page.svelte     # committed search results (/search?q=…)
-    ├── collection/[kind]/[id]/+page.svelte # one album or playlist: play, shuffle, save as a mix
-    ├── mixes/+page.svelte      # all mixes
+    ├── shelf/+page.svelte      # the shelf: liked tracks/albums/playlists + mixes, filtered
+    ├── collection/[kind]/[id]/+page.svelte # one album or playlist: play, shuffle, like, save as a mix
+    ├── mixes/+page.ts          # /mixes redirects to the shelf
     ├── mixes/[id]/+page.svelte # one mix: play, reorder, rename, delete
     └── api/
         ├── search/+server.ts   # keyless search (YouTube Music + fallback) + album/playlist shelves
@@ -167,7 +173,7 @@ There's also a small import map: `src/lib/yt/loader.ts` wraps the IFrame API wit
 
 | command | what it does |
 | --- | --- |
-| `npm run shots` | desktop smoke test (floating search → results page → play → lyrics → immersive → queue → save a mix → flavours) + screenshots into `screenshots/` |
+| `npm run shots` | desktop smoke test (floating search → results page → play → lyrics → immersive → queue → save a mix → the shelf → flavours) + screenshots into `screenshots/` |
 | `npm run shots:mobile` | the same flow at phone size |
 | `node scripts/debug-play.mjs "query"` | playback diagnosis: state polling + console + failed requests |
 | `node scripts/check-art-browser.mjs "query"` | album art diagnosis (referrer / size issues) |

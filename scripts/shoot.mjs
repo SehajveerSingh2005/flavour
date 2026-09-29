@@ -163,6 +163,10 @@ await shoot('11-lyrics');
 await page.click('.lyrics-close');
 await sleep(400);
 
+// ...and like the track, so the shelf has something on it
+await page.click('.np .like-btn');
+await sleep(400);
+
 // 6 ── immersive mode: click the sleeve
 await page.click('.np .poster-art');
 await sleep(1600);
@@ -177,13 +181,16 @@ await shoot('07-queue');
 await page.click('.np .bar-btn');
 await sleep(600);
 
-// 8 ── save an album as a mix, then visit it
+// 8 ── save an album as a mix, like it, then visit the shelf
 await page.evaluate(() => document.querySelector('.side-card .coll .save')?.click());
 await waitFor(() => JSON.parse(localStorage.getItem('flavour:mixes') || '[]').length > 0, 20000, 'mix saved');
 await sleep(500);
-await page.goto(`${BASE}/mixes`, { waitUntil: 'domcontentloaded' });
+await page.evaluate(() => document.querySelector('.side-card .coll .like')?.click());
+await sleep(400);
+await page.goto(`${BASE}/shelf`, { waitUntil: 'domcontentloaded' });
 await waitFor(() => !!document.querySelector('.mix-tile'), 10000, 'mix tiles');
 await sleep(600);
+await shoot('12-shelf');
 await page.evaluate(() => document.querySelector('.mix-tile')?.click());
 await waitFor(() => location.pathname.startsWith('/mixes/'), 10000, 'mix route');
 await sleep(900);

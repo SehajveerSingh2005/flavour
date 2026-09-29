@@ -25,6 +25,16 @@ const QUERY = process.argv[2] ?? 'lofi beats';
 mkdirSync(OUT, { recursive: true });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+async function waitFor(fn, timeout = 20000, label = 'condition') {
+	const started = Date.now();
+	while (Date.now() - started < timeout) {
+		if (await page.evaluate(fn)) return true;
+		await sleep(250);
+	}
+	console.log(`TIMED OUT waiting for ${label}`);
+	return false;
+}
+
 const browser = await puppeteer.launch({
 	executablePath: CHROME,
 	headless: true,
