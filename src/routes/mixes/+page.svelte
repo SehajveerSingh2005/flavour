@@ -17,7 +17,7 @@
 </script>
 
 <svelte:head>
-	<title>mixes — FLAVOUR</title>
+	<title>mixes — FLAVOURS</title>
 </svelte:head>
 
 <div class="mixes-page">

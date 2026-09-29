@@ -105,6 +105,15 @@ await page.reload({ waitUntil: 'domcontentloaded' });
 await waitFor(() => !!document.querySelector('#yt-host'), 20000, 'youtube host');
 await page.evaluate(() => document.fonts?.ready);
 await sleep(1000);
+
+// 0 ── first run: the welcome tour greets a fresh browser
+if (await page.evaluate(() => !!document.querySelector('.onboarding'))) {
+	await sleep(500);
+	await shoot('00-welcome');
+	await page.evaluate(() => document.querySelector('.onboarding .actions .btn--accent')?.click());
+	await sleep(500);
+}
+
 await shoot('01-home-matcha');
 
 // 2 ── flavour switch
@@ -141,6 +150,18 @@ await waitFor(
 await sleep(1200);
 await shoot('05-playing-taro');
 console.log('while playing:', JSON.stringify(await state(), null, 1));
+
+// 5b ── lyrics on the playing track
+await page.click('.lyrics-btn');
+await waitFor(
+	() => (document.querySelector('.lyrics-text')?.textContent?.trim().length ?? 0) > 40,
+	20000,
+	'lyrics'
+);
+await sleep(500);
+await shoot('11-lyrics');
+await page.click('.lyrics-close');
+await sleep(400);
 
 // 6 ── immersive mode
 await page.click('.np .watch');

@@ -52,7 +52,7 @@
 </script>
 
 <svelte:head>
-	<title>{q ? `${q} — FLAVOUR` : 'search — FLAVOUR'}</title>
+	<title>{q ? `${q} — FLAVOURS` : 'search — FLAVOURS'}</title>
 </svelte:head>
 
 {#snippet collectionShelf(items: Collection[], kind: 'album' | 'playlist')}

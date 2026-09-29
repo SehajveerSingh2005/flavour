@@ -51,7 +51,15 @@
 		'arrow-up': '<path d="M12 19V5"/><path d="m6 11 6-6 6 6"/>',
 		'arrow-down': '<path d="M12 5v14"/><path d="m6 13 6 6 6-6"/>',
 		link: '<path d="M9.5 14.5 14.5 9.5"/><path d="m11 6.5 1-1a4.2 4.2 0 0 1 6 6l-1 1"/><path d="m13 17.5-1 1a4.2 4.2 0 0 1-6-6l1-1"/>',
-		clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/>'
+		clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/>',
+		heart:
+			'<path d="M12 19.7 5.3 13a4.3 4.3 0 0 1 6.1-6.1l.6.6.6-.6a4.3 4.3 0 0 1 6.1 6.1Z" stroke-linejoin="round"/>',
+		'heart-filled':
+			'<path d="M12 19.7 5.3 13a4.3 4.3 0 0 1 6.1-6.1l.6.6.6-.6a4.3 4.3 0 0 1 6.1 6.1Z" fill="currentColor" stroke-linejoin="round"/>',
+		quote:
+			'<path d="M5 5h14a1.6 1.6 0 0 1 1.6 1.6v6.8A1.6 1.6 0 0 1 19 15h-6.4L7.6 19v-4H5a1.6 1.6 0 0 1-1.6-1.6V6.6A1.6 1.6 0 0 1 5 5Z" stroke-linejoin="round"/><path d="M8 9h8"/><path d="M8 12h5"/>',
+		download: '<path d="M12 4v11"/><path d="m7.8 10.8 4.2 4.2 4.2-4.2"/><path d="M5 20h14"/>',
+		upload: '<path d="M12 20V9"/><path d="m7.8 13.2 4.2-4.2 4.2 4.2"/><path d="M5 4h14"/>'
 	} as const;
 
 	export type IconName = keyof typeof ICONS;

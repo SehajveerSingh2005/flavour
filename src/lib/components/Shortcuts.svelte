@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { fade, fly } from 'svelte/transition';
+	import { onboarding } from '$lib/onboarding.svelte';
 	import Icon from './Icon.svelte';
 
 	interface Props {
@@ -23,7 +24,8 @@
 				['n / p', 'next / previous'],
 				['m', 'mute'],
 				['s', 'shuffle'],
-				['r', 'repeat mode']
+				['r', 'repeat mode'],
+				['l', 'lyrics']
 			]
 		},
 		{
@@ -79,7 +81,19 @@
 				{/each}
 			</div>
 
-			<footer class="muted mono">press ? any time — esc closes</footer>
+			<footer class="muted mono">
+				<button
+					class="again"
+					onclick={() => {
+						open = false;
+						onboarding.show();
+					}}
+				>
+					show the intro again
+				</button>
+				<span class="sep">·</span>
+				<span>press ? any time — esc closes</span>
+			</footer>
 		</div>
 	</div>
 {/if}
@@ -147,5 +161,19 @@
 		padding-top: 12px;
 		font-size: 0.72rem;
 		text-align: center;
+	}
+	.again {
+		border: 0;
+		background: none;
+		font: inherit;
+		color: var(--accent);
+		font-weight: 700;
+		text-decoration: underline;
+		text-underline-offset: 3px;
+		cursor: pointer;
+	}
+	.sep {
+		padding: 0 6px;
+		opacity: 0.6;
 	}
 </style>

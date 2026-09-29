@@ -324,6 +324,15 @@ export async function fetchRadio(videoId: string): Promise<Track[]> {
 	return tracks;
 }
 
+/** Timed lyrics from YouTube Music — throws when the track has none. */
+export async function fetchLyrics(videoId: string): Promise<string> {
+	const yt = await getInnertube();
+	const shelf = await yt.music.getLyrics(videoId);
+	const text = shelf?.description?.toString().trim() ?? '';
+	if (!text) throw new Error('Lyrics not available');
+	return text;
+}
+
 /** Metadata for a single pasted video link. */
 export async function fetchVideo(id: string): Promise<Track | null> {
 	const yt = await getInnertube();

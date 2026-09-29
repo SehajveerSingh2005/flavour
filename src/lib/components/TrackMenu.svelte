@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { likes } from '$lib/likes.svelte';
 	import { mixes } from '$lib/mixes.svelte';
 	import { player } from '$lib/player.svelte';
 	import { toasts } from '$lib/toasts.svelte';
@@ -53,6 +54,11 @@
 		const mix = mixes.create('new mix', [track]);
 		toasts.push(`started “${mix.name}” — rename it any time`, 'accent');
 	}
+
+	function toggleLike() {
+		const liked = likes.toggle(track);
+		toasts.push(liked ? `liked “${track.title}”` : `took “${track.title}” out of likes`, liked ? 'accent' : 'info');
+	}
 </script>
 
 <svelte:window onclick={onDocClick} onkeydown={(event) => event.key === 'Escape' && (open = false)} />
@@ -75,6 +81,10 @@
 		</button>
 		<button class="menu-item" role="menuitem" onclick={() => act(() => player.addToQueue(track))}>
 			<Icon name="plus" size={15} /> add to queue
+		</button>
+		<button class="menu-item" role="menuitem" onclick={() => act(toggleLike)}>
+			<Icon name={likes.has(track.id) ? 'heart-filled' : 'heart'} size={15} />
+			{likes.has(track.id) ? 'unlike' : 'like'}
 		</button>
 		<p class="menu-sep label">add to mix</p>
 		{#each mixes.items as mix (mix.id)}

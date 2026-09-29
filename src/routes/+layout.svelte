@@ -7,13 +7,17 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import MiniPlayer from '$lib/components/MiniPlayer.svelte';
 	import NowPlaying from '$lib/components/NowPlaying.svelte';
+	import Onboarding from '$lib/components/Onboarding.svelte';
 	import QueuePanel from '$lib/components/QueuePanel.svelte';
 	import SearchField from '$lib/components/SearchField.svelte';
 	import Shortcuts from '$lib/components/Shortcuts.svelte';
 	import Toaster from '$lib/components/Toaster.svelte';
 	import VideoDock from '$lib/components/VideoDock.svelte';
 	import { history } from '$lib/history.svelte';
+	import { likes } from '$lib/likes.svelte';
+	import { lyrics } from '$lib/lyrics.svelte';
 	import { mixes } from '$lib/mixes.svelte';
+	import { onboarding } from '$lib/onboarding.svelte';
 	import { player } from '$lib/player.svelte';
 	import { search } from '$lib/search.svelte';
 	import { ui } from '$lib/ui.svelte';
@@ -29,7 +33,9 @@
 		search.hydrate();
 		history.hydrate();
 		mixes.hydrate();
+		likes.hydrate();
 		ui.hydrate();
+		onboarding.maybeShow();
 
 		function onKey(event: KeyboardEvent) {
 			const target = event.target as HTMLElement | null;
@@ -40,6 +46,10 @@
 				return;
 			}
 
+			if (onboarding.open) {
+				if (event.key === 'Escape') onboarding.dismiss();
+				return;
+			}
 			if (event.key === '?' || (event.key === '/' && event.shiftKey)) {
 				event.preventDefault();
 				help = !help;
@@ -96,6 +106,10 @@
 				case 'F':
 					player.toggleImmersive();
 					break;
+				case 'l':
+				case 'L':
+					if (player.current) lyrics.toggle();
+					break;
 				case '/':
 					event.preventDefault();
 					document.getElementById('search-input')?.focus();
@@ -117,7 +131,7 @@
 
 <div class="shell">
 	<header class="topbar">
-		<a class="wordmark display" href="/">FLAVOUR</a>
+		<a class="wordmark display" href="/">FLAVOURS</a>
 		<nav class="nav" aria-label="Primary">
 			<a class="nav-link" class:on={path === '/'} href="/">home</a>
 			<a class="nav-link" class:on={onSearch} href="/search">search</a>
@@ -156,6 +170,7 @@
 <VideoDock />
 <MiniPlayer />
 <Shortcuts bind:open={help} />
+<Onboarding open={onboarding.open} ondismiss={() => onboarding.dismiss()} />
 <Toaster />
 
 <style>

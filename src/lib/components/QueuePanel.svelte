@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { flip } from 'svelte/animate';
 	import { formatDuration, formatRuntime } from '$lib/format';
+	import { likes } from '$lib/likes.svelte';
+	import { mixes } from '$lib/mixes.svelte';
 	import { player } from '$lib/player.svelte';
 	import { toasts } from '$lib/toasts.svelte';
+	import type { Track } from '$lib/types';
 	import { ui } from '$lib/ui.svelte';
 	import Icon from './Icon.svelte';
 
@@ -22,6 +25,8 @@
 	let headMenu = $state<HeadMenuState | null>(null);
 	let dragFrom = $state<number | null>(null);
 	let dragOver = $state<number | null>(null);
+	let saving = $state(false);
+	let mixName = $state('');
 
 	const totalTime = $derived(player.queue.reduce((sum, item) => sum + (item.duration || 0), 0));
 	const upcoming = $derived(Math.max(player.queue.length - (player.index + 1), 0));
@@ -107,6 +112,40 @@
 		const ok = await player.refillQueue();
 		if (!ok && !player.refilling) toasts.push('The radio had nothing new', 'error');
 	}
+
+	/* ---------- save the queue as a mix ---------- */
+	function startSaving() {
+		if (!player.queue.length) return;
+		mixName = '';
+		saving = true;
+		if (!ui.queueOpen) ui.toggleQueue();
+	}
+
+	function saveMix(event: SubmitEvent) {
+		event.preventDefault();
+		if (!player.queue.length) return;
+		const tracks: Track[] = player.queue.map((item) => ({
+			id: item.id,
+			title: item.title,
+			artist: item.artist,
+			duration: item.duration,
+			art: item.art,
+			source: item.source
+		}));
+		const mix = mixes.create(mixName.trim() || 'queue', tracks);
+		saving = false;
+		mixName = '';
+		toasts.push(`saved ${tracks.length} tracks to “${mix.name}”`, 'accent');
+	}
+
+	function toggleLike(track: Track | undefined) {
+		if (!track) return;
+		const liked = likes.toggle(track);
+		toasts.push(
+			liked ? `liked “${track.title}”` : `took “${track.title}” out of likes`,
+			liked ? 'accent' : 'info'
+		);
+	}
 </script>
 
 <svelte:window
@@ -151,6 +190,19 @@
 
 	{#if ui.queueOpen}
 		<div class="queue-body">
+			{#if saving}
+				<form class="save-mix" onsubmit={saveMix}>
+					<input
+						class="input"
+						placeholder="name this mix"
+						bind:value={mixName}
+						aria-label="Mix name"
+						autocomplete="off"
+					/>
+					<button class="btn btn--accent" type="submit">save</button>
+					<button class="btn btn--ghost" type="button" onclick={() => (saving = false)}>cancel</button>
+				</form>
+			{/if}
 			{#if !player.queue.length}
 				<div class="placeholder">
 					<div class="placeholder-art squircle" aria-hidden="true"><Icon name="list" size={22} /></div>
@@ -287,6 +339,14 @@
 		<button
 			class="menu-item"
 			role="menuitem"
+			disabled={!player.queue.length}
+			onclick={() => act(startSaving)}
+		>
+			<Icon name="disc" size={15} /> save as a mix
+		</button>
+		<button
+			class="menu-item"
+			role="menuitem"
 			disabled={!player.radio || !player.current || player.refilling}
 			onclick={() => act(() => void topUp())}
 		>
@@ -305,6 +365,7 @@
 {/if}
 
 {#if menu}
+	{@const rowTrack = player.queue[menu.index]}
 	<div class="row-menu card" role="menu" style="left:{menu.x}px; top:{menu.y}px">
 		<button class="menu-item" role="menuitem" onclick={() => act(() => player.playAt(menu!.index))}>
 			<Icon name="play" size={15} /> play now
@@ -316,6 +377,10 @@
 			onclick={() => act(() => player.moveToNext(menu!.index))}
 		>
 			<Icon name="play-next" size={15} /> play next
+		</button>
+		<button class="menu-item" role="menuitem" onclick={() => act(() => toggleLike(rowTrack))}>
+			<Icon name={rowTrack && likes.has(rowTrack.id) ? 'heart-filled' : 'heart'} size={15} />
+			{rowTrack && likes.has(rowTrack.id) ? 'unlike' : 'like'}
 		</button>
 		<button
 			class="menu-item"
@@ -526,6 +591,27 @@
 		min-height: 0;
 		overflow-y: auto;
 		padding: 6px 10px 12px;
+	}
+	/* ---------- save the queue as a mix ---------- */
+	.save-mix {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin: 6px 2px 10px;
+		padding: 10px;
+		border: 2px dashed var(--ink);
+		border-radius: 14px;
+		background: color-mix(in srgb, var(--surface-2) 60%, transparent);
+	}
+	.save-mix .input {
+		flex: 1 1 140px;
+		min-width: 0;
+		padding: 0.5rem 0.7rem;
+		font-size: 0.85rem;
+	}
+	.save-mix .btn {
+		padding: 0.45rem 0.7rem;
+		font-size: 0.8rem;
 	}
 	.list {
 		list-style: none;

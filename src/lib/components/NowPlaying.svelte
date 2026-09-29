@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { formatTime } from '$lib/format';
 	import { luckyQuery } from '$lib/lucky';
+	import { lyrics } from '$lib/lyrics.svelte';
 	import { player } from '$lib/player.svelte';
 	import { search } from '$lib/search.svelte';
 	import { toasts } from '$lib/toasts.svelte';
@@ -32,6 +33,12 @@
 			artFailed = false;
 			dragging = null;
 		}
+	});
+
+	// keep the sheet in step with the track while it is open
+	$effect(() => {
+		const id = track?.id;
+		if (lyrics.open && id) void lyrics.load(id);
 	});
 
 	/** Empty deck: lucky takes the typed query, or leans on your own listening. */
@@ -101,29 +108,55 @@
 			</button>
 		</div>
 	{:else if track}
-		<!-- the poster: art with the record slipping out, text over a gradient -->
+		<!-- the poster: art with the record slipping out — or the lyrics -->
 		<div class="poster">
 			<div class="disc" class:spinning={player.isPlaying} aria-hidden="true"></div>
-			<button
-				class="poster-art squircle"
-				onclick={() => player.setImmersive(true)}
-				title="Watch the video (F)"
-				aria-label="Watch the video"
-			>
-				{#if track.art && !artFailed}
-					<img src={track.art} alt="" referrerpolicy="no-referrer" onerror={() => (artFailed = true)} />
-				{:else}
-					<span class="art-fallback"><Icon name="music" size={44} /></span>
-				{/if}
-				<span class="overlay">
-					<span class="overlay-label mono">
-						now playing{queuePos ? ` · ${queuePos}` : ''}
+			{#if lyrics.open}
+				<div class="poster-art squircle lyrics-sheet" role="region" aria-label="Lyrics">
+					<header class="lyrics-head">
+						<span class="lyrics-label mono">lyrics</span>
+						<span class="grow"></span>
+						<button
+							class="btn btn--icon tiny lyrics-close"
+							title="Close lyrics (L)"
+							aria-label="Close lyrics"
+							onclick={() => lyrics.close()}
+						>
+							<Icon name="x" size={14} />
+						</button>
+					</header>
+					<div class="lyrics-body">
+						{#if lyrics.loading}
+							<p class="lyrics-note"><span class="spinner"></span> fetching lyrics…</p>
+						{:else if lyrics.error}
+							<p class="lyrics-note">{lyrics.error}</p>
+						{:else}
+							<p class="lyrics-text">{lyrics.text}</p>
+						{/if}
+					</div>
+				</div>
+			{:else}
+				<button
+					class="poster-art squircle"
+					onclick={() => player.setImmersive(true)}
+					title="Watch the video (F)"
+					aria-label="Watch the video"
+				>
+					{#if track.art && !artFailed}
+						<img src={track.art} alt="" referrerpolicy="no-referrer" onerror={() => (artFailed = true)} />
+					{:else}
+						<span class="art-fallback"><Icon name="music" size={44} /></span>
+					{/if}
+					<span class="overlay">
+						<span class="overlay-label mono">
+							now playing{queuePos ? ` · ${queuePos}` : ''}
+						</span>
+						<strong class="overlay-title display truncate" title={track.title}>{track.title}</strong>
+						<em class="overlay-artist truncate" title={track.artist}>{track.artist}</em>
 					</span>
-					<strong class="overlay-title display truncate" title={track.title}>{track.title}</strong>
-					<em class="overlay-artist truncate" title={track.artist}>{track.artist}</em>
-				</span>
-				<span class="art-hint"><Icon name="maximize" size={13} /> watch</span>
-			</button>
+					<span class="art-hint"><Icon name="maximize" size={13} /> watch</span>
+				</button>
+			{/if}
 		</div>
 
 		<div class="scrub-row">
@@ -201,6 +234,16 @@
 				oninput={(event) => player.setVolume(Number(event.currentTarget.value))}
 				aria-label="Volume"
 			/>
+			<button
+				class="btn btn--icon tiny lyrics-btn"
+				class:btn--on={lyrics.open}
+				title="Lyrics (L)"
+				aria-label="Lyrics"
+				aria-pressed={lyrics.open}
+				onclick={() => lyrics.toggle()}
+			>
+				<Icon name="quote" size={16} />
+			</button>
 			<button
 				class="btn btn--icon tiny watch"
 				title="Watch the video (F)"
@@ -386,6 +429,67 @@
 		.art-hint {
 			display: none;
 		}
+	}
+
+	/* ---------- lyrics: the sleeve turns into a song sheet ---------- */
+	.lyrics-sheet {
+		display: grid;
+		grid-template-rows: auto minmax(0, 1fr);
+		gap: 8px;
+		padding: 10px 12px 12px;
+		cursor: default;
+		background: linear-gradient(
+			168deg,
+			color-mix(in srgb, var(--accent) 9%, var(--surface)),
+			var(--surface)
+		);
+	}
+	.lyrics-sheet:hover {
+		transform: rotate(-1deg);
+		box-shadow: var(--shadow);
+	}
+	.lyrics-head {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding-bottom: 6px;
+		border-bottom: 2px dashed var(--faint);
+	}
+	.lyrics-label {
+		font-size: 0.62rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.09em;
+		color: var(--muted);
+	}
+	.lyrics-body {
+		min-height: 0;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		padding-right: 4px;
+		scrollbar-width: thin;
+	}
+	.lyrics-text {
+		margin: 0;
+		white-space: pre-line;
+		font-size: 0.88rem;
+		font-weight: 600;
+		line-height: 1.55;
+		color: var(--ink);
+	}
+	.lyrics-note {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin: 6px 0 0;
+		font-size: 0.82rem;
+		font-weight: 600;
+		color: var(--muted);
+	}
+	.lyrics-note .spinner {
+		width: 14px;
+		height: 14px;
+		border-width: 2px;
 	}
 
 	/* ---------- controls ---------- */

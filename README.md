@@ -1,4 +1,4 @@
-# 🍵 FLAVOUR
+# 🍵 FLAVOURS
 
 **Music, freshly squeezed.** A flavourful YouTube-powered music player — search anything, play it like a real music app, and the video stays out of the way until you want it.
 
@@ -21,6 +21,11 @@ Born from a simple problem: no Spotify at work, but YouTube works fine.
 - **Poster deck + up-next queue** — the rail holds a cover-forward deck with the record slipping out of the sleeve; when the queue opens the deck folds into a compact bar and the list takes the rail, so nothing is ever squeezed. The queue shows the current track plus the next one before you open it
 - **Routed pages, one player** — home (library), search, mixes; the deck and hidden video never unmount, so playback is never interrupted by navigation
 - **Recently played** — the last dozen tracks you played, one tap away on home (and cleared when you clear them)
+- **Likes** — heart any track from its `+` menu; liked songs get their own shelf on home
+- **Lyrics** — the deck flips into a song sheet (`l`), straight from YouTube Music, with a gentle "no lyrics" note for videos outside the catalogue
+- **Saved queues** — turn the whole queue into a mix with a name, from the queue's `⋯` menu
+- **First-run tour** — a short welcome on a fresh browser, replayable from the cheat sheet
+- **Backup** — export everything you've saved as one JSON file, import it on another machine
 - **Hidden playback** — the video runs behind the scenes at 320×180, so it stays audio-first
 - **Immersive mode** — one press and the *same* video animates into a big squircle frame. Never reloads, never interrupts the audio
 - **OS media controls** — Media Session API gives you working media keys and title/artist/artwork in the system media hub
@@ -35,13 +40,17 @@ Born from a simple problem: no Spotify at work, but YouTube works fine.
 | --- | --- |
 | ![Keyboard shortcuts](screenshots/09-shortcuts.png) | <img src="screenshots/m4-playing.png" alt="Mobile layout" width="300" /> |
 
+| First run | Lyrics on the deck |
+| --- | --- |
+| ![Welcome tour](screenshots/00-welcome.png) | ![Lyrics](screenshots/11-lyrics.png) |
+
 ## Stack
 
 - **SvelteKit** (Svelte 5 runes) + TypeScript
 - **Plain CSS design system** (`src/app.css`) — smooth neo-brutalism: chunky ink borders, hard offset shadows, squircle corners (`corner-shape`), mono metadata
 - **One inline SVG icon set** (`src/lib/components/Icon.svelte`) — no icon fonts, no emoji
 - **YouTube IFrame Player API** for playback, one player instance, two layouts
-- **`youtubei.js`** in the server routes — keyless search, up-next radio, video/playlist link resolution, edge-cached
+- **`youtubei.js`** in the server routes — keyless search, up-next radio, video/playlist link resolution and lyrics, edge-cached
 - **Vercel** for hosting (adapter-vercel)
 
 ## Getting started
@@ -66,6 +75,7 @@ No API keys, no `.env`, no accounts needed to run it.
 | `s` | shuffle |
 | `r` | repeat mode |
 | `f` | toggle immersive mode |
+| `l` | lyrics |
 | `/` | focus search |
 | `?` | keyboard cheat sheet |
 | `esc` | close overlays |
@@ -89,15 +99,20 @@ src/
 │   ├── ui.svelte.ts            # deck/queue accordion state, persisted
 │   ├── theme.svelte.ts         # flavour switching + persistence
 │   ├── lucky.ts                # the lucky button's seed — your own history, never a fixed list
+│   ├── likes.svelte.ts         # liked tracks, persisted
+│   ├── lyrics.svelte.ts        # lyric sheet state + session cache
+│   ├── onboarding.svelte.ts    # the first-run tour, remembered per browser
+│   ├── backup.ts               # export/import every `flavour:` key as JSON
 │   ├── youtube.ts              # YouTube link parsing (shared client/server)
 │   ├── mediaSession.ts         # OS media controls
 │   ├── format.ts               # time formatting, title cleanup
 │   ├── flavours.ts             # flavour metadata
 │   ├── server/yt.ts            # shared Innertube client + track mappers
+│   ├── server/cache.ts         # in-process memo for warm function instances
 │   └── yt/loader.ts            # one-time IFrame API loader + minimal typings
 └── routes/
     ├── +layout.svelte          # shell: topbar nav + search, persistent deck/queue rail
-    ├── +page.svelte            # home: jump back in + your mixes
+    ├── +page.svelte            # home: jump back in, liked, recommended, your mixes, backup
     ├── search/+page.svelte     # committed search results (/search?q=…)
     ├── collection/[kind]/[id]/+page.svelte # one album or playlist: play, shuffle, save as a mix
     ├── mixes/+page.svelte      # all mixes
@@ -106,6 +121,7 @@ src/
         ├── search/+server.ts   # keyless search (YouTube Music + fallback) + album/playlist shelves
         ├── collection/+server.ts # album/playlist header + tracks
         ├── radio/+server.ts    # up-next radio for the current video
+        ├── lyrics/+server.ts   # lyrics for the current track
         └── resolve/+server.ts  # pasted video/playlist links → tracks
 ```
 
@@ -131,9 +147,9 @@ The `/api/search` route becomes a Vercel function, and search responses are cach
 - falls back to a regular YouTube video search when a song isn't in the music catalogue
 - it's unofficial, so if YouTube changes things, use the diagnostics below
 
-`/api/radio` asks the music API for "up next" for the current video, and `/api/resolve` turns a pasted video/playlist URL into tracks. All three share one Innertube client in `src/lib/server/yt.ts` and cache at the edge.
+`/api/radio` asks the music API for "up next" for the current video, `/api/lyrics` fetches the lyric sheet for a track, and `/api/resolve` turns a pasted video/playlist URL into tracks. All of them share one Innertube client in `src/lib/server/yt.ts`, memoise on warm instances, and cache at the edge.
 
-There's also a small import map: `src/lib/yt/loader.ts` wraps the IFrame API with just the typings FLAVOUR uses.
+There's also a small import map: `src/lib/yt/loader.ts` wraps the IFrame API with just the typings FLAVOURS uses.
 
 ## Notes and known quirks
 
@@ -142,14 +158,16 @@ There's also a small import map: `src/lib/yt/loader.ts` wraps the IFrame API wit
 - **Autoplay radio** comes from YouTube Music's up-next feed: it needs the current track to be in the music catalogue, otherwise it quietly gives up
 - **Mobile browsers** may pause background playback when the screen locks — that's a browser limitation, not the app
 - `youtubei.js` occasionally logs a parser warning (`TextBadge not found!`) while it JIT-generates the missing class; search and playback carry on — it's noise from the library, not the app
-- Album art sets `referrerpolicy="no-referrer"`: some YouTube CDN images reject unknown referrers
+- **Album art** sets `referrerpolicy="no-referrer"`: some YouTube CDN images reject unknown referrers
+- **Lyrics** come from YouTube Music — tracks it doesn't know (most regular videos) simply say so
+- Your data stays in `localStorage` under `flavour:` keys — that prefix is kept from the old name so nothing you saved is lost
 - `static/robots.txt` disallows indexing — this is a personal toy, not a public service
 
 ## Dev scripts
 
 | command | what it does |
 | --- | --- |
-| `npm run shots` | desktop smoke test (floating search → results page → play → immersive → queue → save a mix → flavours) + screenshots into `screenshots/` |
+| `npm run shots` | desktop smoke test (floating search → results page → play → lyrics → immersive → queue → save a mix → flavours) + screenshots into `screenshots/` |
 | `npm run shots:mobile` | the same flow at phone size |
 | `node scripts/debug-play.mjs "query"` | playback diagnosis: state polling + console + failed requests |
 | `node scripts/check-art-browser.mjs "query"` | album art diagnosis (referrer / size issues) |
@@ -160,9 +178,7 @@ Set `CHROME_PATH` if Chrome/Edge isn't in the default location.
 
 - PWA install with an offline shell
 - Floating always-on-top player via Document Picture-in-Picture
-- Lyrics panel (YouTube captions are already being fetched by the embed)
 - Sleep timer with a gentle volume fade
-- Likes / favourites inside mixes
 - Sharing mixes (needs a tiny backend: Vercel KV + a `/playlist/[id]` route)
 - Voice search — "play <song> by <artist>"
 - Crossfade-ish transitions between tracks

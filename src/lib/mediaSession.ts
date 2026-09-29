@@ -37,7 +37,7 @@ export function updateMediaMetadata(track: Track) {
 	ms.metadata = new MediaMetadata({
 		title: track.title,
 		artist: track.artist,
-		album: 'FLAVOUR',
+		album: 'FLAVOURS',
 		artwork: art
 			? [
 					{ src: art, sizes: '544x544', type: 'image/jpeg' },

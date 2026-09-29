@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { exportData, importData } from '$lib/backup';
 	import Icon from '$lib/components/Icon.svelte';
 	import MixTile from '$lib/components/MixTile.svelte';
 	import Recommended from '$lib/components/Recommended.svelte';
 	import Tile from '$lib/components/Tile.svelte';
 	import { history } from '$lib/history.svelte';
+	import { likes } from '$lib/likes.svelte';
 	import { luckyQuery } from '$lib/lucky';
 	import { mixes } from '$lib/mixes.svelte';
 	import { player } from '$lib/player.svelte';
@@ -43,14 +45,29 @@
 		name = '';
 		void goto(`/mixes/${mix.id}`);
 	}
+
+	async function onImport(event: Event) {
+		const input = event.currentTarget as HTMLInputElement;
+		const file = input.files?.[0];
+		if (!file) return;
+		try {
+			const count = await importData(file);
+			toasts.push(`imported ${count} saved things — reloading`, 'accent');
+			setTimeout(() => location.reload(), 700);
+		} catch {
+			toasts.push('That does not look like a flavours backup', 'error');
+		} finally {
+			input.value = '';
+		}
+	}
 </script>
 
 <svelte:head>
-	<title>FLAVOUR — music, freshly squeezed</title>
+	<title>FLAVOURS — music, freshly squeezed</title>
 </svelte:head>
 
 <div class="home">
-	{#if !history.items.length && !mixes.items.length}
+	{#if !history.items.length && !mixes.items.length && !likes.items.length}
 		<section class="card welcome">
 			<div class="welcome-art" aria-hidden="true">
 				<span class="disc"></span>
@@ -101,6 +118,28 @@
 		</section>
 	{/if}
 
+	{#if likes.items.length}
+		<section class="shelf" aria-label="Liked">
+			<header class="shelf-head">
+				<span class="label mono">liked</span>
+				<span class="grow"></span>
+				<span class="label mono">{likes.items.length}</span>
+			</header>
+			<ul class="covers">
+				{#each likes.items as track (track.id)}
+					<li>
+						<Tile
+							art={track.art}
+							title={track.title}
+							subtitle={track.artist}
+							onclick={() => player.playNow(track, likes.items)}
+						/>
+					</li>
+				{/each}
+			</ul>
+		</section>
+	{/if}
+
 	<Recommended />
 
 	<section class="shelf" aria-label="Your mixes">
@@ -140,6 +179,25 @@
 				{/if}
 			</li>
 		</ul>
+	</section>
+
+	<section class="shelf" aria-label="Backup">
+		<header class="shelf-head">
+			<span class="label mono">backup</span>
+			<span class="grow"></span>
+		</header>
+		<div class="backup-row">
+			<button class="mini-btn" onclick={exportData} title="Download mixes, likes, queue and history">
+				<Icon name="download" size={12} /> export
+			</button>
+			<label class="mini-btn" title="Restore a flavours backup file">
+				<Icon name="upload" size={12} /> import
+				<input class="file-input" type="file" accept=".json,application/json" onchange={onImport} />
+			</label>
+			<span class="backup-hint muted">
+				local-first — mixes, likes, queue and history live in this browser
+			</span>
+		</div>
 	</section>
 </div>
 
@@ -338,5 +396,23 @@
 	}
 	.new-mix-row .btn--ghost {
 		flex: 0 1 auto;
+	}
+
+	/* ---------- backup ---------- */
+	.backup-row {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 10px;
+		padding: 0 2px;
+	}
+	.backup-row .mini-btn {
+		gap: 5px;
+	}
+	.file-input {
+		display: none;
+	}
+	.backup-hint {
+		font-size: 0.76rem;
 	}
 </style>

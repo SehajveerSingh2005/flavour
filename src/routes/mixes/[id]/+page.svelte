@@ -90,7 +90,7 @@
 </script>
 
 <svelte:head>
-	<title>{mix?.name ? `${mix.name} — FLAVOUR` : 'mix — FLAVOUR'}</title>
+	<title>{mix?.name ? `${mix.name} — FLAVOURS` : 'mix — FLAVOURS'}</title>
 </svelte:head>
 
 {#if !mix}

@@ -108,7 +108,7 @@
 </script>
 
 <svelte:head>
-	<title>{data ? `${data.title} — FLAVOUR` : `${label} — FLAVOUR`}</title>
+	<title>{data ? `${data.title} — FLAVOURS` : `${label} — FLAVOURS`}</title>
 </svelte:head>
 
 {#if error}
