@@ -107,7 +107,7 @@ await page.evaluate(() => document.fonts?.ready);
 await sleep(1000);
 
 // 0 ── first run: the welcome tour greets a fresh browser
-if (await page.evaluate(() => !!document.querySelector('.onboarding'))) {
+if (await waitFor(() => !!document.querySelector('.onboarding'), 15000, 'onboarding')) {
 	await sleep(500);
 	await shoot('00-welcome');
 	await page.evaluate(() => document.querySelector('.onboarding .actions .btn--accent')?.click());

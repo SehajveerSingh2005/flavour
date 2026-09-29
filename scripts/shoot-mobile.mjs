@@ -43,7 +43,7 @@ await page.evaluate(() => document.fonts?.ready);
 await sleep(1200);
 
 // first run: the welcome tour — keep a mobile shot, then start listening
-if (await page.evaluate(() => !!document.querySelector('.onboarding'))) {
+if (await waitFor(() => !!document.querySelector('.onboarding'), 15000, 'onboarding')) {
 	await sleep(500);
 	await page.screenshot({ path: `${OUT}/m0-welcome.png` });
 	await page.evaluate(() => document.querySelector('.onboarding .actions .btn--accent')?.click());
