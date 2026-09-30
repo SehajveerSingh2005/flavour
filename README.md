@@ -138,3 +138,9 @@ src/
 - **Mobile browsers** may pause background playback when the screen locks — that's a browser limitation, not the app
 - Everything you save lives in this browser (`localStorage`); home → backup exports it as one JSON file
 - `static/robots.txt` disallows indexing — this is a personal toy, not a public service
+
+## License
+
+MIT © sehaz — fork it, remix it, ship it, just keep the copyright notice.
+
+The licence covers this codebase only. Everything the app plays is streamed from YouTube and remains YouTube's (and its rights holders') — Flavours ships no media of its own.
